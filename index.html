@@ -1523,7 +1523,150 @@ textarea {
   </div>
 
   <div id="toast" class="toast"></div>
+
+  <div id="soundToggle" style="position:fixed;bottom:20px;right:20px;z-index:9999;width:48px;height:48px;border-radius:50%;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);backdrop-filter:blur(12px);display:grid;place-items:center;cursor:pointer;font-size:1.4rem;box-shadow:0 4px 16px rgba(0,0,0,0.3);transition:all .15s ease;" onclick="toggleSound()">🔇</div>
+
   <script>
+const SFX = (() => {
+  let ctx = null;
+  let bgmOscs = [];
+  let bgmGain = null;
+  let bgmPlaying = false;
+  let enabled = JSON.parse(localStorage.getItem("mathAdvSound") || "true");
+
+  function getCtx() {
+    if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
+    if (ctx.state === "suspended") ctx.resume();
+    return ctx;
+  }
+
+  function playTone(freq, dur, type = "sine", vol = 0.3, delay = 0) {
+    if (!enabled) return;
+    const c = getCtx();
+    const osc = c.createOscillator();
+    const g = c.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, c.currentTime + delay);
+    g.gain.setValueAtTime(vol, c.currentTime + delay);
+    g.gain.exponentialRampToValueAtTime(0.001, c.currentTime + delay + dur);
+    osc.connect(g);
+    g.connect(c.destination);
+    osc.start(c.currentTime + delay);
+    osc.stop(c.currentTime + delay + dur);
+  }
+
+  function click() {
+    playTone(800, 0.06, "square", 0.15);
+    playTone(1200, 0.04, "square", 0.1, 0.02);
+  }
+
+  function correct() {
+    playTone(523, 0.12, "sine", 0.25);
+    playTone(659, 0.12, "sine", 0.25, 0.1);
+    playTone(784, 0.2, "sine", 0.3, 0.2);
+  }
+
+  function wrong() {
+    playTone(300, 0.15, "sawtooth", 0.15);
+    playTone(200, 0.3, "sawtooth", 0.12, 0.1);
+  }
+
+  function levelUp() {
+    [523, 587, 659, 784, 880, 1047].forEach((f, i) => {
+      playTone(f, 0.15, "sine", 0.2, i * 0.08);
+    });
+  }
+
+  function bossHit() {
+    playTone(150, 0.1, "sawtooth", 0.2);
+    playTone(100, 0.15, "square", 0.15, 0.05);
+    playTone(80, 0.2, "sawtooth", 0.1, 0.1);
+  }
+
+  function bossDefeat() {
+    [784, 880, 1047, 1175, 1319, 1568].forEach((f, i) => {
+      playTone(f, 0.2, "sine", 0.25, i * 0.1);
+    });
+    playTone(1568, 0.5, "triangle", 0.2, 0.6);
+  }
+
+  function coin() {
+    playTone(988, 0.08, "square", 0.12);
+    playTone(1319, 0.15, "square", 0.15, 0.06);
+  }
+
+  function combo() {
+    playTone(1047, 0.1, "sine", 0.2);
+    playTone(1319, 0.1, "sine", 0.2, 0.08);
+    playTone(1568, 0.15, "sine", 0.25, 0.16);
+  }
+
+  function startBGM() {
+    if (bgmPlaying || !enabled) return;
+    const c = getCtx();
+    bgmGain = c.createGain();
+    bgmGain.gain.setValueAtTime(0.06, c.currentTime);
+    bgmGain.connect(c.destination);
+
+    const notes = [262, 294, 330, 349, 392, 349, 330, 294];
+    let noteIndex = 0;
+    function playNote() {
+      if (!bgmPlaying) return;
+      const osc = c.createOscillator();
+      const g = c.createGain();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(notes[noteIndex % notes.length], c.currentTime);
+      g.gain.setValueAtTime(0.08, c.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001, c.currentTime + 0.45);
+      osc.connect(g);
+      g.connect(bgmGain);
+      osc.start(c.currentTime);
+      osc.stop(c.currentTime + 0.5);
+
+      const bass = c.createOscillator();
+      const bg = c.createGain();
+      bass.type = "triangle";
+      bass.frequency.setValueAtTime(notes[noteIndex % notes.length] / 2, c.currentTime);
+      bg.gain.setValueAtTime(0.04, c.currentTime);
+      bg.gain.exponentialRampToValueAtTime(0.001, c.currentTime + 0.45);
+      bass.connect(bg);
+      bg.connect(bgmGain);
+      bass.start(c.currentTime);
+      bass.stop(c.currentTime + 0.5);
+
+      noteIndex++;
+    }
+
+    bgmPlaying = true;
+    playNote();
+    const interval = setInterval(() => {
+      if (!bgmPlaying) { clearInterval(interval); return; }
+      playNote();
+    }, 500);
+    bgmOscs.push(interval);
+  }
+
+  function stopBGM() {
+    bgmPlaying = false;
+    bgmOscs.forEach(id => clearInterval(id));
+    bgmOscs = [];
+    if (bgmGain) { bgmGain.disconnect(); bgmGain = null; }
+  }
+
+  function toggle() {
+    enabled = !enabled;
+    localStorage.setItem("mathAdvSound", JSON.stringify(enabled));
+    document.getElementById("soundToggle").textContent = enabled ? "🔊" : "🔇";
+    if (!enabled) stopBGM();
+  }
+
+  function isEnabled() { return enabled; }
+
+  return { click, correct, wrong, levelUp, bossHit, bossDefeat, coin, combo, startBGM, stopBGM, toggle, isEnabled };
+})();
+
+function toggleSound() { SFX.toggle(); }
+
 window.MathAdventureData = {
   worlds: [
     { id: 1, name: "森林王国", grade: "一年级", icon: "🌲", boss: "🐺", focus: "20以内加减法", color: "#2fac66" },
@@ -1730,6 +1873,8 @@ function showToast(message) {
 function switchView(id) {
   $$(".view").forEach(v => v.classList.toggle("active", v.id === id));
   $$(".nav").forEach(n => n.classList.toggle("active", n.dataset.view === id));
+  if (id === "battle" || id === "english") { SFX.startBGM(); }
+  else { SFX.stopBGM(); }
   renderAll();
 }
 
@@ -2439,11 +2584,12 @@ function generateQuestion(skillId = null) {
 }
 
 function buildAdventureQuestion() {
+  const grade = state.player.currentWorld;
   const type = nextAdventureQuestionType();
-  if (type === "word") return buildMathQuestion("word", "choice");
-  if (type === "judge") return buildMathQuestion(pickCalculationSkill(), "judge");
-  if (type === "fill") return buildMathQuestion(pickCalculationSkill(), "fill");
-  return buildMathQuestion(pickCalculationSkill(), "choice");
+  if (type === "word") return buildMathQuestion("word", "choice", grade);
+  if (type === "judge") return buildMathQuestion(pickCalculationSkill(), "judge", grade);
+  if (type === "fill") return buildMathQuestion(pickCalculationSkill(), "fill", grade);
+  return buildMathQuestion(pickCalculationSkill(), "choice", grade);
 }
 
 function generatePracticeQuestion() {
@@ -2615,12 +2761,15 @@ function answerQuestion(value, btn) {
     const damage = 18 + Math.min(18, state.player.combo * 2);
     state.boss.hp = Math.max(0, state.boss.hp - damage);
     gainReward();
+    SFX.correct();
+    if (state.player.combo >= 3) SFX.combo();
     showEffect(`-${damage}`);
     showToast(`答对了！Boss 受到 ${damage} 点伤害。`);
     if (state.boss.hp <= 0) clearLevel();
   } else {
     state.player.combo = 0;
     state.player.stamina = Math.max(0, state.player.stamina - 1);
+    SFX.wrong();
     addWrong(value === null ? "超时" : value, currentQuestion);
     showEffect("MISS");
     showToast(`答错了，正确答案是 ${currentQuestion.answer}。已加入错题本。`);
@@ -2654,9 +2803,11 @@ function answerPracticeQuestion(value, btn) {
     state.player.combo += 1;
     state.player.maxCombo = Math.max(state.player.maxCombo, state.player.combo);
     gainReward();
+    SFX.correct();
     showToast("练习答对了！获得金币和经验。");
   } else {
     state.player.combo = 0;
+    SFX.wrong();
     addWrong(value === "" ? "未填写" : value, currentPracticeQuestion);
     showToast(`练习答错了，正确答案是 ${currentPracticeQuestion.answer}。已加入错题本。`);
   }
@@ -2684,11 +2835,13 @@ function gainReward() {
   const xpBase = state.inventory.doubleXpLeft > 0 ? 20 : 10;
   if (state.inventory.doubleXpLeft > 0) state.inventory.doubleXpLeft -= 1;
   state.player.coin += 8 + petBonusCoin;
+  SFX.coin();
   state.player.xp += xpBase + petBonusXp;
   state.pet.xp += 10;
   if (state.pet.xp >= 100) {
     state.pet.xp -= 100;
     state.pet.level += 1;
+    SFX.levelUp();
     showToast(`宠物升级到 Lv.${state.pet.level}！`);
   }
   while (state.player.xp >= 100) {
@@ -2696,6 +2849,7 @@ function gainReward() {
     state.player.level += 1;
     state.player.diamond += 1;
     state.player.stamina += 5;
+    SFX.levelUp();
     showToast(`升级了！当前等级 ${state.player.level}。`);
   }
 }
@@ -2716,6 +2870,8 @@ function addWrong(userAnswer, question = currentQuestion) {
 function clearLevel() {
   const world = getCurrentWorld();
   showToast(`击败 ${world.name} Boss！获得通关奖励。`);
+  SFX.bossDefeat();
+  SFX.levelUp();
   adventureQuestionBag = [];
   state.player.coin += 50;
   state.player.diamond += 1;
@@ -3032,6 +3188,8 @@ function showEnglishEffect(text) {
 function clearEnglishLevel() {
   const world = DATA.englishWorlds.find(w => w.id === state.english.currentWorld) || DATA.englishWorlds[0];
   showToast(`击败 ${world.name} 英语Boss！获得通关奖励。`);
+  SFX.bossDefeat();
+  SFX.levelUp();
   state.player.coin += 50;
   state.player.diamond += 1;
   state.english.bossHp = state.english.bossMaxHp;
@@ -3087,6 +3245,11 @@ let englishTimerId = null;
 let englishTimeLeft = 30;
 
 function bindActions() {
+  document.addEventListener("click", (e) => {
+    if (e.target.closest("button") || e.target.closest(".nav") || e.target.closest(".practice-mode") || e.target.closest(".world-card")) {
+      SFX.click();
+    }
+  });
   $("newQuestionBtn").addEventListener("click", () => {
     if (state.player.stamina <= 0) return showToast("体力不足，请稍后恢复或使用复活卡。");
     generateQuestion();
@@ -3143,6 +3306,7 @@ function init() {
   checkLogin();
   refreshLeaderboard();
   saveState();
+  document.getElementById("soundToggle").textContent = SFX.isEnabled() ? "🔊" : "🔇";
 }
 
 init();
