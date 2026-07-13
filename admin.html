@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>数学大冒险管理后台</title>
+  <style>
+    :root {
+      --bg: #f6efe4;
+      --card: #ffffff;
+      --ink: #263144;
+      --muted: #6f7a8d;
+      --rule: #eadcc8;
+      --primary: #ff7a3d;
+      --blue: #2f88ff;
+      --green: #2fac66;
+      --shadow: 0 18px 48px rgba(38, 49, 68, .12);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--bg);
+      font-family: "Microsoft YaHei", Arial, sans-serif;
+    }
+    .page {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 28px 0 48px;
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 18px;
+      margin-bottom: 20px;
+    }
+    h1 {
+      margin: 0;
+      font-size: clamp(2rem, 5vw, 4rem);
+      letter-spacing: -.06em;
+    }
+    p { color: var(--muted); }
+    .panel {
+      padding: 22px;
+      border-radius: 24px;
+      background: var(--card);
+      border: 1px solid var(--rule);
+      box-shadow: var(--shadow);
+      margin-bottom: 18px;
+    }
+    .login {
+      display: grid;
+      grid-template-columns: 1fr 1fr auto;
+      gap: 12px;
+      align-items: end;
+    }
+    input {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 14px;
+      border: 1px solid var(--rule);
+      background: #fffaf1;
+      outline: none;
+    }
+    label { display: grid; gap: 6px; color: var(--muted); font-weight: 700; }
+    button {
+      border: 0;
+      padding: 13px 18px;
+      border-radius: 14px;
+      color: #fff;
+      background: linear-gradient(135deg, var(--primary), var(--blue));
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+    }
+    .stat {
+      padding: 18px;
+      border-radius: 18px;
+      background: #fffaf1;
+      border: 1px solid var(--rule);
+    }
+    .stat strong {
+      display: block;
+      font-size: 2.2rem;
+      color: var(--blue);
+      line-height: 1;
+    }
+    .table-wrap {
+      overflow: auto;
+      max-height: 560px;
+      border: 1px solid var(--rule);
+      border-radius: 18px;
+    }
+    table {
+      width: 100%;
+      min-width: 900px;
+      border-collapse: collapse;
+    }
+    th, td {
+      padding: 13px 14px;
+      border-bottom: 1px solid var(--rule);
+      text-align: left;
+    }
+    th { background: #fffaf1; }
+    td { color: var(--muted); }
+    .ok { color: var(--green); font-weight: 800; }
+    .error { color: #d93042; font-weight: 800; }
+    @media (max-width: 800px) {
+      header, .login { grid-template-columns: 1fr; flex-direction: column; align-items: stretch; }
+      .stats { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header>
+      <div>
+        <h1>管理后台</h1>
+        <p>查看注册用户、云端存档数量、成绩提交数量和最高分。</p>
+      </div>
+      <a href="index.html">返回游戏</a>
+    </header>
+
+    <section class="panel">
+      <h2>管理员登录</h2>
+      <div class="login">
+        <label>用户名<input id="username" value="admin"></label>
+        <label>密码<input id="password" type="password" value="admin123"></label>
+        <button id="loginBtn">登录后台</button>
+      </div>
+      <p id="message">默认管理员：admin / admin123。正式上线前请修改默认密码。</p>
+    </section>
+
+    <section class="panel">
+      <h2>平台概览</h2>
+      <div class="stats">
+        <div class="stat"><strong id="users">0</strong><span>注册用户</span></div>
+        <div class="stat"><strong id="scores">0</strong><span>成绩记录</span></div>
+        <div class="stat"><strong id="saves">0</strong><span>云端存档</span></div>
+        <div class="stat"><strong id="bestScore">0</strong><span>最高分</span></div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>用户列表</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>用户名</th>
+              <th>昵称</th>
+              <th>角色</th>
+              <th>最高分</th>
+              <th>最高等级</th>
+              <th>注册时间</th>
+              <th>最近登录</th>
+            </tr>
+          </thead>
+          <tbody id="userBody">
+            <tr><td colspan="8">请先登录后台。</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    let token = localStorage.getItem("math_adventure_admin_token") || "";
+    const $ = (id) => document.getElementById(id);
+
+    async function api(path, options = {}) {
+      const headers = Object.assign({ "Content-Type": "application/json" }, options.headers || {});
+      if (token) headers.Authorization = `Bearer ${token}`;
+      const res = await fetch(path, Object.assign({}, options, { headers }));
+      const data = await res.json();
+      if (!res.ok || data.ok === false) throw new Error(data.error || "请求失败");
+      return data;
+    }
+
+    function message(text, ok = true) {
+      $("message").textContent = text;
+      $("message").className = ok ? "ok" : "error";
+    }
+
+    async function login() {
+      try {
+        const data = await api("/api/login", {
+          method: "POST",
+          body: JSON.stringify({ username: $("username").value.trim(), password: $("password").value })
+        });
+        if (!data.user.isAdmin) throw new Error("该账号不是管理员");
+        token = data.token;
+        localStorage.setItem("math_adventure_admin_token", token);
+        message("登录成功。");
+        await refresh();
+      } catch (err) {
+        message(err.message, false);
+      }
+    }
+
+    async function refresh() {
+      try {
+        const statData = await api("/api/admin/stats");
+        const userData = await api("/api/admin/users");
+        $("users").textContent = statData.stats.users;
+        $("scores").textContent = statData.stats.scores;
+        $("saves").textContent = statData.stats.saves;
+        $("bestScore").textContent = statData.stats.bestScore;
+        $("userBody").innerHTML = userData.items.map(user => `
+          <tr>
+            <td>${user.id}</td>
+            <td>${user.username}</td>
+            <td>${user.display_name}</td>
+            <td>${user.is_admin ? "管理员" : "玩家"}</td>
+            <td>${user.best_score}</td>
+            <td>${user.best_level}</td>
+            <td>${user.created_at || ""}</td>
+            <td>${user.last_login || ""}</td>
+          </tr>
+        `).join("");
+      } catch (err) {
+        message(err.message, false);
+      }
+    }
+
+    $("loginBtn").addEventListener("click", login);
+    if (token) refresh();
+  </script>
+</body>
+</html>
