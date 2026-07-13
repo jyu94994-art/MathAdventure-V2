@@ -1189,8 +1189,19 @@ textarea {
           </div>
           <div class="practice-layout">
             <aside class="panel">
+              <h3>选择学科</h3>
+              <div class="practice-mode-grid" style="margin-bottom:12px;">
+                <button class="practice-mode active" data-practice-subject="math">
+                  <b>🔢 数学</b>
+                  <span>计算、应用、几何</span>
+                </button>
+                <button class="practice-mode" data-practice-subject="english">
+                  <b>🅰️ 英语</b>
+                  <span>单词、词汇、拼写</span>
+                </button>
+              </div>
               <h3>选择练习类型</h3>
-              <div class="practice-mode-grid">
+              <div class="practice-mode-grid" id="practiceTypeGrid">
                 <button class="practice-mode active" data-practice-type="mixed">
                   <b>综合练习</b>
                   <span>计算、应用、判断、填空混合出现</span>
@@ -1550,7 +1561,7 @@ const defaultState = {
   },
   wrongbook: [],
   achievements: {},
-  practice: { type: "mixed", grade: 1, answered: 0, correct: 0 },
+  practice: { type: "mixed", grade: 1, answered: 0, correct: 0, subject: "math" },
   english: { currentWorld: 1, currentLevel: 1, bossHp: 100, bossMaxHp: 100, combo: 0, answered: 0, correct: 0 },
   daily: { date: "", signed: false, answeredToday: 0 }
 };
@@ -1721,13 +1732,65 @@ function renderBattleStatus() {
 }
 
 function renderPractice() {
-  if (!state.practice) state.practice = { type: "mixed", grade: 1, answered: 0, correct: 0 };
+  if (!state.practice) state.practice = { type: "mixed", grade: 1, answered: 0, correct: 0, subject: "math" };
   if (!state.practice.grade) state.practice.grade = 1;
-  $("practiceModeTitle").textContent = practiceTypeName(state.practice.type);
+  if (!state.practice.subject) state.practice.subject = "math";
+  $("practiceModeTitle").textContent = state.practice.subject === "english" ? "英语练习" : practiceTypeName(state.practice.type);
   $("practiceCount").textContent = state.practice.answered;
   $("practiceCorrect").textContent = state.practice.correct;
   $("practiceGradeSelect").value = String(state.practice.grade);
-  $$(".practice-mode").forEach(btn => btn.classList.toggle("active", btn.dataset.practiceType === state.practice.type));
+  $$("[data-practice-subject]").forEach(btn => btn.classList.toggle("active", btn.dataset.practiceSubject === state.practice.subject));
+  updatePracticeTypeButtons();
+}
+
+function updatePracticeTypeButtons() {
+  const grid = $("practiceTypeGrid");
+  if (!grid) return;
+  if (state.practice.subject === "english") {
+    grid.innerHTML = `
+      <button class="practice-mode ${state.practice.type === 'mixed' ? 'active' : ''}" data-practice-type="mixed">
+        <b>综合练习</b><span>中英互译、单词拼写混合</span>
+      </button>
+      <button class="practice-mode ${state.practice.type === 'en2zh' ? 'active' : ''}" data-practice-type="en2zh">
+        <b>英译中</b><span>看英文选中文意思</span>
+      </button>
+      <button class="practice-mode ${state.practice.type === 'zh2en' ? 'active' : ''}" data-practice-type="zh2en">
+        <b>中译英</b><span>看中文选英文单词</span>
+      </button>
+      <button class="practice-mode ${state.practice.type === 'fill' ? 'active' : ''}" data-practice-type="fill">
+        <b>拼写填空</b><span>根据中文写出英文</span>
+      </button>
+    `;
+  } else {
+    grid.innerHTML = `
+      <button class="practice-mode ${state.practice.type === 'mixed' ? 'active' : ''}" data-practice-type="mixed">
+        <b>综合练习</b><span>计算、应用、判断、填空混合</span>
+      </button>
+      <button class="practice-mode ${state.practice.type === 'word' ? 'active' : ''}" data-practice-type="word">
+        <b>应用题</b><span>读题、列式、解决实际问题</span>
+      </button>
+      <button class="practice-mode ${state.practice.type === 'judge' ? 'active' : ''}" data-practice-type="judge">
+        <b>判断题</b><span>判断算式或结论是否正确</span>
+      </button>
+      <button class="practice-mode ${state.practice.type === 'fill' ? 'active' : ''}" data-practice-type="fill">
+        <b>填空题</b><span>输入答案，训练精准计算</span>
+      </button>
+    `;
+  }
+  Array.from(grid.querySelectorAll("[data-practice-type]")).forEach(btn => {
+    btn.addEventListener("click", () => setPracticeType(btn.dataset.practiceType));
+  });
+}
+
+function setPracticeSubject(subject) {
+  state.practice.subject = subject;
+  state.practice.type = "mixed";
+  currentPracticeQuestion = null;
+  $("practiceQuestionTitle").textContent = "准备练习";
+  $("practiceQuestionBox").innerHTML = `<p>已切换到${subject === 'english' ? '英语' : '数学'}练习，点击“生成练习题”。</p>`;
+  $("practiceAnswerGrid").innerHTML = "";
+  saveState();
+  renderPractice();
 }
 
 function renderSkillWeights() {
@@ -2130,6 +2193,10 @@ function buildMathQuestion(skillId = pickSkill(), questionType = "choice", grade
 }
 
 function buildPracticeQuestion() {
+  const subject = state.practice.subject || "math";
+  if (subject === "english") {
+    return buildEnglishPracticeQuestion();
+  }
   let type = state.practice.type || "mixed";
   if (type === "mixed") {
     const types = ["choice", "word", "judge", "fill"];
@@ -2140,6 +2207,45 @@ function buildPracticeQuestion() {
   if (type === "judge") return buildMathQuestion(pickSkill(), "judge", grade);
   if (type === "fill") return buildMathQuestion(pickSkill(), "fill", grade);
   return buildMathQuestion(pickSkill(), "choice", grade);
+}
+
+function buildEnglishPracticeQuestion() {
+  let type = state.practice.type || "mixed";
+  if (type === "mixed") {
+    const types = ["en2zh", "zh2en", "fill"];
+    type = types[Math.floor(Math.random() * types.length)];
+  }
+  const grade = Number(state.practice.grade || 1);
+  const words = getEnglishWords(grade);
+  const word = words[Math.floor(Math.random() * words.length)];
+  
+  if (type === "zh2en" || type === "fill") {
+    return {
+      type: type === "fill" ? "fill" : "choice",
+      text: type === "fill" ? `写出英文单词：${word.zh} → ______` : `"${word.zh}" 的英文是？`,
+      answer: word.en,
+      options: type === "fill" ? [] : makeEnglishOptions(word.en, words),
+      explain: `"${word.zh}" 的英文是 ${word.en}。`
+    };
+  } else {
+    return {
+      type: "choice",
+      text: `"${word.en}" 的中文意思是？`,
+      answer: word.zh,
+      options: makeEnglishOptions(word.zh, words, "zh"),
+      explain: `"${word.en}" 的中文意思是 ${word.zh}。`
+    };
+  }
+}
+
+function makeEnglishOptions(correct, words, lang) {
+  const set = new Set([correct]);
+  while (set.size < 4) {
+    const w = words[Math.floor(Math.random() * words.length)];
+    const val = lang === "zh" ? w.zh : w.en;
+    if (val !== correct) set.add(val);
+  }
+  return Array.from(set).sort(() => Math.random() - 0.5);
 }
 
 function generateQuestion(skillId = null) {
@@ -2731,7 +2837,13 @@ function bindActions() {
   $("newPracticeBtn").addEventListener("click", generatePracticeQuestion);
   $("practiceHintBtn").addEventListener("click", usePracticeHint);
   $("practiceGradeSelect").addEventListener("change", (event) => setPracticeGrade(event.target.value));
-  $$(".practice-mode").forEach(btn => btn.addEventListener("click", () => setPracticeType(btn.dataset.practiceType)));
+  $$(".practice-mode").forEach(btn => {
+    if (btn.dataset.practiceSubject) {
+      btn.addEventListener("click", () => setPracticeSubject(btn.dataset.practiceSubject));
+    } else if (btn.dataset.practiceType) {
+      btn.addEventListener("click", () => setPracticeType(btn.dataset.practiceType));
+    }
+  });
   $("feedPetBtn").addEventListener("click", feedPet);
   $("practiceWrongBtn").addEventListener("click", practiceWrong);
   $("clearWrongBtn").addEventListener("click", clearWrongbook);
