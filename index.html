@@ -1029,6 +1029,7 @@ textarea {
         <button class="nav" data-view="map">🗺️ 世界地图</button>
         <button class="nav" data-view="battle">⚔️ 开始冒险</button>
         <button class="nav" data-view="practice">✍️ 练习模式</button>
+        <button class="nav" data-view="english">🅰️ 英语冒险</button>
         <button class="nav" data-view="wrongbook">📒 错题本</button>
         <button class="nav" data-view="pet">🐾 宠物</button>
         <button class="nav" data-view="shop">🛒 商城</button>
@@ -1375,6 +1376,55 @@ textarea {
             <textarea id="saveText" placeholder="导出的存档会显示在这里，也可以粘贴存档后点击导入。"></textarea>
           </div>
         </section>
+
+        <section id="english" class="view">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">English Adventure</p>
+              <h2>英语冒险</h2>
+            </div>
+            <p>单词、语法、句子，用英语打败Boss！</p>
+          </div>
+          <div class="battle-layout">
+            <div class="battle-stage panel">
+              <div class="battle-top">
+                <div>
+                  <p class="eyebrow" id="englishWorld">英语世界 · 第 1 关</p>
+                  <h2 id="englishQuestionTitle">准备开始英语挑战</h2>
+                </div>
+                <div class="timer" id="englishTimer">30</div>
+              </div>
+              <div class="boss-area">
+                <div class="player-sprite">🧙</div>
+                <div class="battle-effect" id="englishEffect">+</div>
+                <div class="boss-sprite" id="englishBossSprite">🦉</div>
+              </div>
+              <div class="hp-row">
+                <span>Boss 生命</span>
+                <div class="bar danger"><i id="englishBossHpBar"></i></div>
+                <b id="englishBossHpText">100 / 100</b>
+              </div>
+              <div id="englishQuestionBox" class="question-box">
+                <p>点击“生成英语题”开始挑战。</p>
+              </div>
+              <div id="englishAnswerGrid" class="answer-grid"></div>
+              <div class="battle-actions">
+                <button class="primary" id="newEnglishBtn">生成英语题</button>
+                <button class="secondary" id="englishHintBtn">提示</button>
+              </div>
+            </div>
+            <aside class="panel battle-side">
+              <h3>英语世界</h3>
+              <div id="englishWorldGrid" class="world-grid" style="grid-template-columns:1fr;"></div>
+              <h3 style="margin-top:16px;">本关状态</h3>
+              <ul class="clean-list">
+                <li>连击：<b id="englishCombo">0</b></li>
+                <li>累计答题：<b id="englishAnswered">0</b></li>
+                <li>正确题数：<b id="englishCorrect">0</b></li>
+              </ul>
+            </aside>
+          </div>
+        </section>
       </section>
     </main>
   </div>
@@ -1411,7 +1461,53 @@ window.MathAdventureData = {
     { id: "boss1", name: "森林勇者", desc: "击败森林王国 Boss", coin: 80, diamond: 2 },
     { id: "wrongClear", name: "错题清道夫", desc: "完成一次错题复练", coin: 40, diamond: 1 },
     { id: "petLv3", name: "宠物训练师", desc: "宠物升到 3 级", coin: 60, diamond: 1 }
-  ]
+  ],
+  englishWorlds: [
+    { id: 1, name: "字母森林", grade: "一年级", icon: "🌲", boss: "🦉", focus: "字母与简单单词" },
+    { id: 2, name: "单词海洋", grade: "二年级", icon: "🌊", boss: "🐙", focus: "基础词汇" },
+    { id: 3, name: "语法沙漠", grade: "三年级", icon: "🏜️", boss: "🦂", focus: "简单句型" },
+    { id: 4, name: "短语雪山", grade: "四年级", icon: "❄️", boss: "🐻‍❄️", focus: "常用短语" },
+    { id: 5, name: "时态天空", grade: "五年级", icon: "☁️", boss: "🦅", focus: "时态语法" },
+    { id: 6, name: "阅读宇宙", grade: "六年级", icon: "🪐", boss: "👾", focus: "阅读理解" }
+  ],
+  englishWords: {
+    1: [
+      { en: "apple", zh: "苹果" }, { en: "cat", zh: "猫" }, { en: "dog", zh: "狗" },
+      { en: "book", zh: "书" }, { en: "pen", zh: "笔" }, { en: "red", zh: "红色" },
+      { en: "sun", zh: "太阳" }, { en: "moon", zh: "月亮" }, { en: "star", zh: "星星" },
+      { en: "ball", zh: "球" }, { en: "fish", zh: "鱼" }, { en: "bird", zh: "鸟" }
+    ],
+    2: [
+      { en: "school", zh: "学校" }, { en: "teacher", zh: "老师" }, { en: "student", zh: "学生" },
+      { en: "friend", zh: "朋友" }, { en: "family", zh: "家庭" }, { en: "happy", zh: "开心的" },
+      { en: "water", zh: "水" }, { en: "bread", zh: "面包" }, { en: "milk", zh: "牛奶" },
+      { en: "tree", zh: "树" }, { en: "flower", zh: "花" }, { en: "green", zh: "绿色" }
+    ],
+    3: [
+      { en: "morning", zh: "早上" }, { en: "evening", zh: "晚上" }, { en: "breakfast", zh: "早餐" },
+      { en: "dinner", zh: "晚餐" }, { en: "subject", zh: "科目" }, { en: "science", zh: "科学" },
+      { en: "beautiful", zh: "美丽的" }, { en: "weather", zh: "天气" }, { en: "season", zh: "季节" },
+      { en: "animal", zh: "动物" }, { en: "vegetable", zh: "蔬菜" }, { en: "favorite", zh: "最喜欢的" }
+    ],
+    4: [
+      { en: "play football", zh: "踢足球" }, { en: "read books", zh: "读书" }, { en: "go shopping", zh: "去购物" },
+      { en: "watch TV", zh: "看电视" }, { en: "get up", zh: "起床" }, { en: "go to bed", zh: "睡觉" },
+      { en: "have lunch", zh: "吃午饭" }, { en: "do homework", zh: "做作业" }, { en: "take a walk", zh: "散步" },
+      { en: "by bus", zh: "乘公交车" }, { en: "on foot", zh: "步行" }, { en: "at school", zh: "在学校" }
+    ],
+    5: [
+      { en: "played", zh: "play 的过去式" }, { en: "went", zh: "go 的过去式" }, { en: "was", zh: "am/is 的过去式" },
+      { en: "were", zh: "are 的过去式" }, { en: "did", zh: "do 的过去式" }, { en: "had", zh: "have 的过去式" },
+      { en: "eating", zh: "eat 的现在分词" }, { en: "running", zh: "run 的现在分词" }, { en: "bigger", zh: "big 的比较级" },
+      { en: "fastest", zh: "fast 的最高级" }, { en: "carefully", zh: "careful 的副词" }, { en: "children", zh: "child 的复数" }
+    ],
+    6: [
+      { en: "environment", zh: "环境" }, { en: "technology", zh: "科技" }, { en: "culture", zh: "文化" },
+      { en: "experience", zh: "经验" }, { en: "knowledge", zh: "知识" }, { en: "challenge", zh: "挑战" },
+      { en: "opportunity", zh: "机会" }, { en: "development", zh: "发展" }, { en: "communication", zh: "交流" },
+      { en: "responsibility", zh: "责任" }, { en: "achievement", zh: "成就" }, { en: "imagination", zh: "想象力" }
+    ]
+  }
 };
 
 </script>
@@ -1455,6 +1551,7 @@ const defaultState = {
   wrongbook: [],
   achievements: {},
   practice: { type: "mixed", grade: 1, answered: 0, correct: 0 },
+  english: { currentWorld: 1, currentLevel: 1, bossHp: 100, bossMaxHp: 100, combo: 0, answered: 0, correct: 0 },
   daily: { date: "", signed: false, answeredToday: 0 }
 };
 
@@ -1554,6 +1651,7 @@ function renderAll() {
   renderMap();
   renderBattleStatus();
   renderPractice();
+  renderEnglishStatus();
   renderWrongbook();
   renderPet();
   renderShop();
@@ -2439,6 +2537,190 @@ function changeAvatar() {
   renderAll();
 }
 
+function getEnglishWords(grade) {
+  return DATA.englishWords[grade] || DATA.englishWords[1];
+}
+
+function buildEnglishQuestion(grade) {
+  const words = getEnglishWords(grade);
+  const word = words[Math.floor(Math.random() * words.length)];
+  const type = Math.random();
+  
+  if (type < 0.33) {
+    // 看中文选英文
+    const options = [word.en];
+    while (options.length < 4) {
+      const w = words[Math.floor(Math.random() * words.length)];
+      if (!options.includes(w.en)) options.push(w.en);
+    }
+    return {
+      type: "choice",
+      text: `"${word.zh}" 的英文是？`,
+      answer: word.en,
+      options: options.sort(() => Math.random() - 0.5),
+      explain: `"${word.zh}" 的英文是 ${word.en}。`
+    };
+  } else if (type < 0.66) {
+    // 看英文选中文
+    const options = [word.zh];
+    while (options.length < 4) {
+      const w = words[Math.floor(Math.random() * words.length)];
+      if (!options.includes(w.zh)) options.push(w.zh);
+    }
+    return {
+      type: "choice",
+      text: `"${word.en}" 的中文意思是？`,
+      answer: word.zh,
+      options: options.sort(() => Math.random() - 0.5),
+      explain: `"${word.en}" 的中文意思是 ${word.zh}。`
+    };
+  } else {
+    // 拼写填空
+    return {
+      type: "fill",
+      text: `根据中文意思写出英文单词：${word.zh} → ______`,
+      answer: word.en,
+      options: [],
+      explain: `"${word.zh}" 的英文是 ${word.en}。`
+    };
+  }
+}
+
+function generateEnglishQuestion() {
+  const g = state.english.currentWorld;
+  currentEnglishQuestion = buildEnglishQuestion(g);
+  renderEnglishQuestion();
+  startEnglishTimer();
+}
+
+function renderEnglishQuestion() {
+  const q = currentEnglishQuestion;
+  $("englishQuestionTitle").textContent = q.type === "fill" ? "单词拼写" : "词汇选择";
+  $("englishQuestionBox").innerHTML = `<p>${q.text}</p>`;
+  renderAnswerArea(q, "englishAnswerGrid", answerEnglishQuestion);
+}
+
+function startEnglishTimer() {
+  clearInterval(englishTimerId);
+  englishTimeLeft = 30;
+  $("englishTimer").textContent = englishTimeLeft;
+  englishTimerId = setInterval(() => {
+    englishTimeLeft -= 1;
+    $("englishTimer").textContent = englishTimeLeft;
+    if (englishTimeLeft <= 0) {
+      clearInterval(englishTimerId);
+      answerEnglishQuestion(null, null);
+    }
+  }, 1000);
+}
+
+function answerEnglishQuestion(value, btn) {
+  if (!currentEnglishQuestion) return;
+  clearInterval(englishTimerId);
+  const correct = normalizeAnswer(value) === normalizeAnswer(currentEnglishQuestion.answer);
+  
+  Array.from($("englishAnswerGrid").querySelectorAll("[data-answer]")).forEach(b => {
+    b.disabled = true;
+    if (normalizeAnswer(b.dataset.answer) === normalizeAnswer(currentEnglishQuestion.answer)) b.classList.add("correct");
+  });
+  if (btn && !correct) btn.classList.add("wrong");
+
+  state.english.answered += 1;
+  state.daily.answeredToday += 1;
+  state.stats.answered += 1;
+
+  if (correct) {
+    state.english.correct += 1;
+    state.stats.correct += 1;
+    state.english.combo += 1;
+    state.player.combo += 1;
+    state.player.maxCombo = Math.max(state.player.maxCombo, state.player.combo);
+    const damage = 18 + Math.min(18, state.english.combo * 2);
+    state.english.bossHp = Math.max(0, state.english.bossHp - damage);
+    gainReward();
+    showEnglishEffect(`-${damage}`);
+    showToast(`答对了！英语Boss受到 ${damage} 点伤害。`);
+    if (state.english.bossHp <= 0) clearEnglishLevel();
+  } else {
+    state.english.combo = 0;
+    state.player.combo = 0;
+    state.player.stamina = Math.max(0, state.player.stamina - 1);
+    addWrong(value === null ? "超时" : value, currentEnglishQuestion);
+    showEnglishEffect("MISS");
+    showToast(`答错了，正确答案是 ${currentEnglishQuestion.answer}。`);
+  }
+
+  checkAchievements();
+  saveState();
+  renderEnglishStatus();
+  currentEnglishQuestion = null;
+}
+
+function showEnglishEffect(text) {
+  const effect = $("englishEffect");
+  effect.textContent = text;
+  effect.classList.remove("show");
+  void effect.offsetWidth;
+  effect.classList.add("show");
+}
+
+function clearEnglishLevel() {
+  const world = DATA.englishWorlds.find(w => w.id === state.english.currentWorld) || DATA.englishWorlds[0];
+  showToast(`击败 ${world.name} 英语Boss！获得通关奖励。`);
+  state.player.coin += 50;
+  state.player.diamond += 1;
+  state.english.bossHp = state.english.bossMaxHp;
+  state.english.combo = 0;
+  if (state.english.currentLevel < 10) {
+    state.english.currentLevel += 1;
+  } else if (state.english.currentWorld < DATA.englishWorlds.length) {
+    state.english.currentWorld += 1;
+    state.english.currentLevel = 1;
+  }
+  submitScore(true);
+  saveState();
+  renderEnglishStatus();
+}
+
+function renderEnglishStatus() {
+  const world = DATA.englishWorlds.find(w => w.id === state.english.currentWorld) || DATA.englishWorlds[0];
+  $("englishWorld").textContent = `${world.name} · 第 ${state.english.currentLevel} 关`;
+  $("englishBossSprite").textContent = world.boss;
+  $("englishBossHpBar").style.width = `${Math.max(0, (state.english.bossHp / state.english.bossMaxHp) * 100)}%`;
+  $("englishBossHpText").textContent = `${state.english.bossHp} / ${state.english.bossMaxHp}`;
+  $("englishCombo").textContent = state.english.combo;
+  $("englishAnswered").textContent = state.english.answered;
+  $("englishCorrect").textContent = state.english.correct;
+  $("englishWorldGrid").innerHTML = DATA.englishWorlds.map(w => {
+    const unlocked = w.id <= state.english.currentWorld;
+    const current = w.id === state.english.currentWorld;
+    return `
+      <article class="world-card ${unlocked ? "" : "locked"}">
+        <div class="world-icon">${w.icon}</div>
+        <h3>${w.name}</h3>
+        <p>${w.grade} · ${w.focus}</p>
+        <div class="world-meta">
+          <span class="tag">${unlocked ? "已解锁" : "未解锁"}</span>
+          <span class="tag">${current ? `当前第 ${state.english.currentLevel} 关` : "10关挑战"}</span>
+        </div>
+      </article>
+    `;
+  }).join("");
+}
+
+function useEnglishHint() {
+  if (!currentEnglishQuestion) return showToast("请先生成题目。");
+  if (state.inventory.hint <= 0) return showToast("提示卡不足，可以去商城购买。");
+  state.inventory.hint -= 1;
+  revealHint(currentEnglishQuestion, "englishAnswerGrid");
+  saveState();
+  renderAll();
+}
+
+let currentEnglishQuestion = null;
+let englishTimerId = null;
+let englishTimeLeft = 30;
+
 function bindActions() {
   $("newQuestionBtn").addEventListener("click", () => {
     if (state.player.stamina <= 0) return showToast("体力不足，请稍后恢复或使用复活卡。");
@@ -2472,6 +2754,11 @@ function bindActions() {
   $("loadCloudBtn").addEventListener("click", loadCloudSave);
   $("submitScoreBtn").addEventListener("click", () => submitScore(false));
   $("refreshRankBtn").addEventListener("click", refreshLeaderboard);
+  $("newEnglishBtn").addEventListener("click", () => {
+    if (state.player.stamina <= 0) return showToast("体力不足，请稍后恢复或使用复活卡。");
+    generateEnglishQuestion();
+  });
+  $("englishHintBtn").addEventListener("click", useEnglishHint);
 }
 
 function init() {
