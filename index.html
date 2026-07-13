@@ -2331,16 +2331,17 @@ function buildPracticeQuestion() {
 }
 
 function buildWrongQuestion() {
+  const grade = Number(state.practice.grade || 1);
   if (state.wrongbook.length) {
     const w = state.wrongbook[Math.floor(Math.random() * state.wrongbook.length)];
     return { skill: w.skill, type: "choice", text: w.text, answer: w.answer, options: makeOptions(Number(w.answer) || 0), explain: w.explain, fromWrong: true };
   }
-  return buildMathQuestion(pickSkill(), "choice");
+  return buildMathQuestion(pickSkill(), "choice", grade);
 }
 
 function buildRandomQuestion() {
+  const grade = Number(state.practice.grade || 1);
   const isEnglish = Math.random() > 0.5;
-  const grade = rand(1, 6);
   if (isEnglish) {
     return buildEnglishPracticeQuestion();
   }
@@ -2353,10 +2354,11 @@ function buildRandomQuestion() {
 }
 
 function buildSpeedQuestion() {
+  const grade = Number(state.practice.grade || 1);
   const isEnglish = Math.random() > 0.6;
   if (isEnglish) return buildEnglishPracticeQuestion();
   const type = Math.random() > 0.5 ? "choice" : "fill";
-  return buildMathQuestion(pickSkill(), type);
+  return buildMathQuestion(pickSkill(), type, grade);
 }
 
 function buildAIQuestion() {
@@ -2367,12 +2369,13 @@ function buildAIQuestion() {
     const rate = st.answered ? st.correct / st.answered : 0;
     if (rate < minRate) { minRate = rate; weakest = s.id; }
   });
-  const grade = Number(state.practice.grade || state.player.currentWorld);
+  const grade = Number(state.practice.grade || 1);
   const type = Math.random() > 0.5 ? "choice" : "fill";
   return buildMathQuestion(weakest, type, grade);
 }
 
 function buildExamQuestion() {
+  const grade = Number(state.practice.grade || 1);
   if (!state.exam.active) {
     state.exam = { active: true, total: 20, current: 0, correct: 0, timeLeft: 600, results: [] };
   }
@@ -2380,7 +2383,6 @@ function buildExamQuestion() {
   if (isEnglish) return buildEnglishPracticeQuestion();
   const types = ["choice", "word", "judge", "fill"];
   const type = types[rand(0, types.length - 1)];
-  const grade = Number(state.practice.grade || state.player.currentWorld);
   if (type === "word") return buildMathQuestion("word", "choice", grade);
   if (type === "judge") return buildMathQuestion(pickSkill(), "judge", grade);
   if (type === "fill") return buildMathQuestion(pickSkill(), "fill", grade);
