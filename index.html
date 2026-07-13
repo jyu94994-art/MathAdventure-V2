@@ -1219,6 +1219,29 @@ textarea {
                   <span>输入答案，训练精准计算</span>
                 </button>
               </div>
+              <h3 style="margin-top:16px;">⭐ 挑战模式</h3>
+              <div class="practice-mode-grid" id="challengeGrid">
+                <button class="practice-mode" data-challenge="wrong">
+                  <b>⭐ 错题强化</b>
+                  <span>针对错题专项训练</span>
+                </button>
+                <button class="practice-mode" data-challenge="random">
+                  <b>⭐ 随机挑战</b>
+                  <span>随机学科随机难度</span>
+                </button>
+                <button class="practice-mode" data-challenge="speed">
+                  <b>⭐ 极速模式</b>
+                  <span>每题限时10秒</span>
+                </button>
+                <button class="practice-mode" data-challenge="ai">
+                  <b>⭐ AI智能推荐</b>
+                  <span>针对薄弱点练习</span>
+                </button>
+                <button class="practice-mode" data-challenge="exam">
+                  <b>⭐ 模拟考试</b>
+                  <span>20题限时10分钟</span>
+                </button>
+              </div>
               <div class="practice-stats">
                 <div><strong id="practiceCount">0</strong><span>本次练习</span></div>
                 <div><strong id="practiceCorrect">0</strong><span>本次正确</span></div>
@@ -1246,6 +1269,7 @@ textarea {
                 <p>选择练习类型后，点击“生成练习题”。</p>
               </div>
               <div id="practiceAnswerGrid" class="answer-grid"></div>
+              <div id="examResult" class="panel" style="display:none;margin-top:14px;"></div>
               <div class="battle-actions">
                 <button class="primary" id="newPracticeBtn">生成练习题</button>
                 <button class="secondary" id="practiceHintBtn">提示</button>
@@ -1561,8 +1585,9 @@ const defaultState = {
   },
   wrongbook: [],
   achievements: {},
-  practice: { type: "mixed", grade: 1, answered: 0, correct: 0, subject: "math" },
+  practice: { type: "mixed", grade: 1, answered: 0, correct: 0, subject: "math", challenge: null },
   english: { currentWorld: 1, currentLevel: 1, bossHp: 100, bossMaxHp: 100, combo: 0, answered: 0, correct: 0 },
+  exam: { active: false, total: 20, current: 0, correct: 0, timeLeft: 600, results: [] },
   daily: { date: "", signed: false, answeredToday: 0 }
 };
 
@@ -1732,15 +1757,22 @@ function renderBattleStatus() {
 }
 
 function renderPractice() {
-  if (!state.practice) state.practice = { type: "mixed", grade: 1, answered: 0, correct: 0, subject: "math" };
+  if (!state.practice) state.practice = { type: "mixed", grade: 1, answered: 0, correct: 0, subject: "math", challenge: null };
   if (!state.practice.grade) state.practice.grade = 1;
   if (!state.practice.subject) state.practice.subject = "math";
-  $("practiceModeTitle").textContent = state.practice.subject === "english" ? "英语练习" : practiceTypeName(state.practice.type);
+  const ch = state.practice.challenge;
+  let title = state.practice.subject === "english" ? "英语练习" : practiceTypeName(state.practice.type);
+  if (ch) {
+    const names = { wrong: "错题强化", random: "随机挑战", speed: "极速模式", ai: "AI智能推荐", exam: "模拟考试" };
+    title = `⭐ ${names[ch]}`;
+  }
+  $("practiceModeTitle").textContent = title;
   $("practiceCount").textContent = state.practice.answered;
   $("practiceCorrect").textContent = state.practice.correct;
   $("practiceGradeSelect").value = String(state.practice.grade);
-  $$("[data-practice-subject]").forEach(btn => btn.classList.toggle("active", btn.dataset.practiceSubject === state.practice.subject));
+  $$("[data-practice-subject]").forEach(btn => btn.classList.toggle("active", btn.dataset.practiceSubject === state.practice.subject && !ch));
   updatePracticeTypeButtons();
+  $$("[data-challenge]").forEach(btn => btn.classList.toggle("active", btn.dataset.challenge === ch));
 }
 
 function updatePracticeTypeButtons() {
@@ -1785,12 +1817,36 @@ function updatePracticeTypeButtons() {
 function setPracticeSubject(subject) {
   state.practice.subject = subject;
   state.practice.type = "mixed";
+  state.practice.challenge = null;
+  resetExam();
   currentPracticeQuestion = null;
   $("practiceQuestionTitle").textContent = "准备练习";
   $("practiceQuestionBox").innerHTML = `<p>已切换到${subject === 'english' ? '英语' : '数学'}练习，点击“生成练习题”。</p>`;
   $("practiceAnswerGrid").innerHTML = "";
   saveState();
   renderPractice();
+}
+
+function setChallengeMode(mode) {
+  state.practice.challenge = mode;
+  state.practice.type = "mixed";
+  currentPracticeQuestion = null;
+  resetExam();
+  $("examResult").style.display = "none";
+  const names = { wrong: "错题强化", random: "随机挑战", speed: "极速模式", ai: "AI智能推荐", exam: "模拟考试" };
+  $("practiceQuestionTitle").textContent = `⭐ ${names[mode]} · 准备开始`;
+  $("practiceQuestionBox").innerHTML = `<p>已选择${names[mode]}，点击“生成练习题”开始。</p>`;
+  $("practiceAnswerGrid").innerHTML = "";
+  saveState();
+  renderPractice();
+  if (mode === "exam") {
+    state.exam = { active: true, total: 20, current: 0, correct: 0, timeLeft: 600, results: [] };
+  }
+}
+
+function resetExam() {
+  if (examTimerId) { clearInterval(examTimerId); examTimerId = null; }
+  state.exam = { active: false, total: 20, current: 0, correct: 0, timeLeft: 600, results: [] };
 }
 
 function renderSkillWeights() {
@@ -2193,6 +2249,13 @@ function buildMathQuestion(skillId = pickSkill(), questionType = "choice", grade
 }
 
 function buildPracticeQuestion() {
+  const challenge = state.practice.challenge;
+  if (challenge === "wrong") return buildWrongQuestion();
+  if (challenge === "random") return buildRandomQuestion();
+  if (challenge === "speed") return buildSpeedQuestion();
+  if (challenge === "ai") return buildAIQuestion();
+  if (challenge === "exam") return buildExamQuestion();
+
   const subject = state.practice.subject || "math";
   if (subject === "english") {
     return buildEnglishPracticeQuestion();
@@ -2203,6 +2266,63 @@ function buildPracticeQuestion() {
     type = types[rand(0, types.length - 1)];
   }
   const grade = Number(state.practice.grade || 1);
+  if (type === "word") return buildMathQuestion("word", "choice", grade);
+  if (type === "judge") return buildMathQuestion(pickSkill(), "judge", grade);
+  if (type === "fill") return buildMathQuestion(pickSkill(), "fill", grade);
+  return buildMathQuestion(pickSkill(), "choice", grade);
+}
+
+function buildWrongQuestion() {
+  if (state.wrongbook.length) {
+    const w = state.wrongbook[Math.floor(Math.random() * state.wrongbook.length)];
+    return { skill: w.skill, type: "choice", text: w.text, answer: w.answer, options: makeOptions(Number(w.answer) || 0), explain: w.explain, fromWrong: true };
+  }
+  return buildMathQuestion(pickSkill(), "choice");
+}
+
+function buildRandomQuestion() {
+  const isEnglish = Math.random() > 0.5;
+  const grade = rand(1, 6);
+  if (isEnglish) {
+    return buildEnglishPracticeQuestion();
+  }
+  const types = ["choice", "word", "judge", "fill"];
+  const type = types[rand(0, types.length - 1)];
+  if (type === "word") return buildMathQuestion("word", "choice", grade);
+  if (type === "judge") return buildMathQuestion(pickSkill(), "judge", grade);
+  if (type === "fill") return buildMathQuestion(pickSkill(), "fill", grade);
+  return buildMathQuestion(pickSkill(), "choice", grade);
+}
+
+function buildSpeedQuestion() {
+  const isEnglish = Math.random() > 0.6;
+  if (isEnglish) return buildEnglishPracticeQuestion();
+  const type = Math.random() > 0.5 ? "choice" : "fill";
+  return buildMathQuestion(pickSkill(), type);
+}
+
+function buildAIQuestion() {
+  const weights = calculateSkillWeights();
+  let weakest = "add", minRate = 1;
+  DATA.skills.forEach(s => {
+    const st = state.stats.skill[s.id] || { answered: 0, correct: 0 };
+    const rate = st.answered ? st.correct / st.answered : 0;
+    if (rate < minRate) { minRate = rate; weakest = s.id; }
+  });
+  const grade = Number(state.practice.grade || state.player.currentWorld);
+  const type = Math.random() > 0.5 ? "choice" : "fill";
+  return buildMathQuestion(weakest, type, grade);
+}
+
+function buildExamQuestion() {
+  if (!state.exam.active) {
+    state.exam = { active: true, total: 20, current: 0, correct: 0, timeLeft: 600, results: [] };
+  }
+  const isEnglish = Math.random() > 0.7;
+  if (isEnglish) return buildEnglishPracticeQuestion();
+  const types = ["choice", "word", "judge", "fill"];
+  const type = types[rand(0, types.length - 1)];
+  const grade = Number(state.practice.grade || state.player.currentWorld);
   if (type === "word") return buildMathQuestion("word", "choice", grade);
   if (type === "judge") return buildMathQuestion(pickSkill(), "judge", grade);
   if (type === "fill") return buildMathQuestion(pickSkill(), "fill", grade);
@@ -2268,9 +2388,77 @@ function buildAdventureQuestion() {
 
 function generatePracticeQuestion() {
   currentPracticeQuestion = buildPracticeQuestion();
-  $("practiceQuestionTitle").textContent = `${state.practice.grade}年级 · ${practiceTypeName(currentPracticeQuestion.type === "choice" && currentPracticeQuestion.skill === "word" ? "word" : currentPracticeQuestion.type)} · ${skillName(currentPracticeQuestion.skill)}`;
+  const challenge = state.practice.challenge;
+  let title = `${state.practice.grade}年级 · ${practiceTypeName(currentPracticeQuestion.type === "choice" && currentPracticeQuestion.skill === "word" ? "word" : currentPracticeQuestion.type)} · ${skillName(currentPracticeQuestion.skill)}`;
+  if (challenge === "wrong") title = "⭐ 错题强化 · " + title;
+  if (challenge === "random") title = "⭐ 随机挑战 · " + title;
+  if (challenge === "speed") title = "⭐ 极速模式 · " + title;
+  if (challenge === "ai") title = "⭐ AI推荐 · " + title;
+  if (challenge === "exam") title = `⭐ 模拟考试 · 第 ${state.exam.current + 1}/20 题`;
+  $("practiceQuestionTitle").textContent = title;
   $("practiceQuestionBox").innerHTML = `<p>${currentPracticeQuestion.text}</p>`;
   renderAnswerArea(currentPracticeQuestion, "practiceAnswerGrid", answerPracticeQuestion);
+  if (challenge === "speed") startSpeedTimer();
+  else if (challenge === "exam") startExamTimer();
+}
+
+function startSpeedTimer() {
+  clearInterval(timerId);
+  timeLeft = 10;
+  $("timer") && ($("timer").textContent = timeLeft);
+  timerId = setInterval(() => {
+    timeLeft -= 1;
+    if (timeLeft <= 0) {
+      clearInterval(timerId);
+      answerPracticeQuestion(null, null);
+    }
+  }, 1000);
+}
+
+let examTimerId = null;
+function startExamTimer() {
+  if (examTimerId) return;
+  examTimerId = setInterval(() => {
+    state.exam.timeLeft -= 1;
+    if (state.exam.timeLeft <= 0) {
+      clearInterval(examTimerId);
+      examTimerId = null;
+      finishExam();
+    }
+  }, 1000);
+}
+
+function finishExam() {
+  state.exam.active = false;
+  clearInterval(examTimerId);
+  examTimerId = null;
+  const acc = state.exam.total ? Math.round(state.exam.correct / state.exam.total * 100) : 0;
+  let level = "不合格";
+  if (acc >= 90) level = "优秀";
+  else if (acc >= 80) level = "良好";
+  else if (acc >= 60) level = "及格";
+  const timeUsed = 600 - state.exam.timeLeft;
+  const mins = Math.floor(timeUsed / 60);
+  const secs = timeUsed % 60;
+  $("examResult").style.display = "block";
+  $("examResult").innerHTML = `
+    <h3>🎓 模拟考试结果</h3>
+    <p>总题数：${state.exam.total} &nbsp; 正确：${state.exam.correct} &nbsp; 正确率：${acc}%</p>
+    <p>评级：<b>${level}</b> &nbsp; 用时：${mins}分${secs}秒</p>
+    <div class="toolbar"><button class="primary" onclick="resetChallenge()">重新开始</button></div>
+  `;
+  $("practiceAnswerGrid").innerHTML = "";
+  showToast(`模拟考试结束！评级：${level}`);
+}
+
+function resetChallenge() {
+  state.practice.challenge = null;
+  state.exam = { active: false, total: 20, current: 0, correct: 0, timeLeft: 600, results: [] };
+  $("examResult").style.display = "none";
+  $("practiceQuestionTitle").textContent = "准备练习";
+  $("practiceQuestionBox").innerHTML = "<p>选择练习类型后，点击生成练习题。</p>";
+  saveState();
+  renderPractice();
 }
 
 function makeOptions(answer) {
@@ -2411,6 +2599,17 @@ function answerPracticeQuestion(value, btn) {
     state.player.combo = 0;
     addWrong(value === "" ? "未填写" : value, currentPracticeQuestion);
     showToast(`练习答错了，正确答案是 ${currentPracticeQuestion.answer}。已加入错题本。`);
+  }
+
+  if (state.practice.challenge === "exam") {
+    state.exam.current += 1;
+    if (correct) state.exam.correct += 1;
+    state.exam.results.push({ correct, answer: currentPracticeQuestion.answer, text: currentPracticeQuestion.text });
+    if (state.exam.current >= state.exam.total) {
+      finishExam();
+      currentPracticeQuestion = null;
+      return;
+    }
   }
 
   checkAchievements();
@@ -2841,7 +3040,9 @@ function bindActions() {
     if (btn.dataset.practiceSubject) {
       btn.addEventListener("click", () => setPracticeSubject(btn.dataset.practiceSubject));
     } else if (btn.dataset.practiceType) {
-      btn.addEventListener("click", () => setPracticeType(btn.dataset.practiceType));
+      btn.addEventListener("click", () => { state.practice.challenge = null; setPracticeType(btn.dataset.practiceType); });
+    } else if (btn.dataset.challenge) {
+      btn.addEventListener("click", () => setChallengeMode(btn.dataset.challenge));
     }
   });
   $("feedPetBtn").addEventListener("click", feedPet);
