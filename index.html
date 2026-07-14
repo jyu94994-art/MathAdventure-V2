@@ -489,6 +489,54 @@ p { color: var(--muted); line-height: 1.7; }
   color: var(--muted);
 }
 
+/* 小数猫伙伴 */
+.cat-card { position: relative; overflow: visible; }
+.cat-header { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
+.cat-avatar-wrap { position: relative; flex-shrink: 0; }
+.cat-avatar { font-size: 2.4rem; display: block; animation: catBounce 2.5s ease-in-out infinite; }
+@keyframes catBounce { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+.cat-mood { position: absolute; top: -6px; right: -8px; font-size: 1rem; background: var(--surface); border-radius: 50%; }
+.cat-header h3 { margin: 0; font-size: 1.15rem; }
+.cat-streak { color: var(--muted); font-size: 0.85rem; margin: 4px 0 0; }
+.cat-streak b { color: var(--amber); }
+
+.cat-bubble {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 16px;
+  padding: 12px 16px;
+  margin-bottom: 14px;
+  position: relative;
+  min-height: 48px;
+}
+.cat-bubble::before {
+  content: "";
+  position: absolute;
+  top: -8px;
+  left: 28px;
+  width: 0;
+  height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-bottom: 8px solid rgba(255,255,255,0.08);
+}
+.cat-bubble p { margin: 0; color: var(--muted); line-height: 1.6; font-size: 0.95rem; transition: opacity .3s; }
+.cat-bubble p.fade { opacity: 0; }
+
+.cat-actions { display: flex; gap: 10px; }
+.cat-action-btn {
+  flex: 1;
+  padding: 10px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.04);
+  color: var(--ink);
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background .15s, transform .1s;
+}
+.cat-action-btn:hover { background: rgba(255,255,255,0.1); transform: translateY(-1px); }
+
 .progress-line {
   display: grid;
   grid-template-columns: 72px 1fr auto;
@@ -1237,16 +1285,32 @@ textarea {
                 <b id="bossPreviewText">100%</b>
               </div>
             </article>
-            <article class="panel">
-              <h3>快捷入口</h3>
-              <div class="quick-grid">
-                <button data-jump="wrongbook">错题复练</button>
-                <button data-jump="monster">怪兽巢穴</button>
-                <button data-jump="practice">练习模式</button>
-                <button data-jump="pet">培养宠物</button>
-                <button data-jump="shop">购买道具</button>
+            <article class="panel cat-card">
+              <div class="cat-header">
+                <div class="cat-avatar-wrap">
+                  <span class="cat-avatar">🐱</span>
+                  <span class="cat-mood" id="catMood">😊</span>
+                </div>
+                <div>
+                  <h3>小数猫</h3>
+                  <p class="cat-streak">已经陪你学习 <b id="catDays">1</b> 天</p>
+                </div>
+              </div>
+              <div class="cat-bubble">
+                <p id="catMessage">今天也要加油哦！</p>
+              </div>
+              <div class="cat-actions">
+                <button class="cat-action-btn" id="catEncourageBtn">🐱 鼓励我</button>
+                <button class="cat-action-btn" id="catShareBtn">📊 分享成绩</button>
               </div>
             </article>
+          </div>
+          <div class="quick-grid" style="margin-top:16px;">
+            <button data-jump="wrongbook">错题复练</button>
+            <button data-jump="monster">怪兽巢穴</button>
+            <button data-jump="practice">练习模式</button>
+            <button data-jump="pet">培养宠物</button>
+            <button data-jump="shop">购买道具</button>
           </div>
         </section>
 
@@ -2141,6 +2205,116 @@ function renderHeader() {
   $$(".avatar, .player-sprite").forEach(el => el.textContent = p.avatars[p.avatarIndex]);
 }
 
+// ===== 小数猫 AI 学习伙伴 =====
+let catLastMessage = "";
+let catContext = "idle";
+
+function getCatMessage(context = "idle") {
+  const accuracy = getAccuracy(state.stats);
+  const combo = state.player.combo;
+  const answered = state.stats.answered;
+  const days = calcLearningDays();
+  const activeMonsters = state.monsters.filter(m => !m.defeated).length;
+
+  if (context === "wrong") {
+    const msgs = [
+      `不要灰心，你的整体正确率已经达到 ${accuracy}% 了，很棒！`,
+      `这道题做错了没关系，记住解析下次就不会了喵~`,
+      `错题是进步的阶梯！这道题已经记入错题本了。`,
+      `每个数学高手都是从错题中成长起来的，继续加油！`,
+      `别担心，系统会帮你多练这类题，很快就能掌握了！`
+    ];
+    return msgs[Math.floor(Math.random() * msgs.length)];
+  }
+
+  if (context === "combo") {
+    const msgs = [
+      `${combo} 连击！你的状态太火热了喵！🔥`,
+      `连续答对 ${combo} 题！Boss 都在发抖了！`,
+      `太厉害了 ${combo} 连击！保持住这个节奏！`,
+      `${combo} 连击达成！你简直是数学天才喵~`
+    ];
+    return msgs[Math.floor(Math.random() * msgs.length)];
+  }
+
+  if (context === "monster_kill") {
+    return ["怪兽被打败了！你真是数学小勇士喵！🎉", "又消灭一只怪兽！错题正在被你一一征服！", "太强了！怪兽们听到你的名字都要逃跑喵~"][Math.floor(Math.random() * 3)];
+  }
+
+  if (context === "boss_clear") {
+    return ["Boss 被你打败了！数学王国的力量又恢复了一分！", "通关了！下一章的冒险在等着你喵！", "你离拯救数学王国又近了一步！"][Math.floor(Math.random() * 3)];
+  }
+
+  if (context === "encourage") {
+    const msgs = [
+      `你已经答了 ${answered} 道题了，每一步都在进步喵！`,
+      `正确率 ${accuracy}%，${accuracy >= 80 ? "非常优秀" : accuracy >= 60 ? "继续加油" : "多练习会更好的"}喵！`,
+      `第 ${days} 天的陪伴，我会一直在这里支持你！`,
+      `${activeMonsters ? `还有 ${activeMonsters} 只怪兽等着你去消灭呢！` : "当前没有怪兽，保持全对太厉害了！"}`,
+      `坚持就是胜利，你已经超越了很多同学喵！`
+    ];
+    return msgs[Math.floor(Math.random() * msgs.length)];
+  }
+
+  // idle - 根据状态选默认消息
+  if (answered === 0) {
+    const msgs = ["今天开始学习吧！我在这里陪你喵~", "准备好了吗？来一道题热热身吧！", "数学王国需要你！点击开始冒险吧！"];
+    return msgs[Math.floor(Math.random() * msgs.length)];
+  }
+  if (combo >= 5) {
+    return `连击 ${combo} 保持了！你的专注力太强了喵！`;
+  }
+  if (accuracy >= 90) {
+    return `正确率 ${accuracy}%！你是数学小天才喵~ 🌟`;
+  }
+  if (state.daily.answeredToday === 0) {
+    return "新的一天开始了，来几道题暖暖脑吧喵~";
+  }
+  const msgs = [
+    `今天已经答了 ${state.daily.answeredToday} 道题，${state.daily.answeredToday >= 10 ? "超额完成！" : "继续冲！"}`,
+    `正确率 ${accuracy}%，${accuracy >= 70 ? "表现不错！" : "加油，多练就会更好！"}`,
+    activeMonsters ? `有 ${activeMonsters} 只怪兽在捣乱，快去消灭它们！` : "一切顺利，继续保持喵~"
+  ];
+  return msgs[Math.floor(Math.random() * msgs.length)];
+}
+
+function getCatMood() {
+  const accuracy = getAccuracy(state.stats);
+  if (accuracy >= 90) return "😆";
+  if (accuracy >= 70) return "😊";
+  if (state.player.combo >= 3) return "🤩";
+  const recentWrong = state.wrongbook.length;
+  if (recentWrong > 5) return "😿";
+  if (recentWrong > 0) return "🥺";
+  return "😊";
+}
+
+function setCatMessage(msg) {
+  if (msg === catLastMessage) return;
+  catLastMessage = msg;
+  const el = $("catMessage");
+  el.classList.add("fade");
+  setTimeout(() => { el.textContent = msg; el.classList.remove("fade"); }, 200);
+}
+
+function renderCat() {
+  $("catDays").textContent = calcLearningDays();
+  $("catMood").textContent = getCatMood();
+  setCatMessage(getCatMessage(catContext));
+  // 事件消息显示后重置 context
+  if (catContext !== "idle") catContext = "idle";
+}
+
+function shareCatScore() {
+  const accuracy = getAccuracy(state.stats);
+  const text = `🐱 小数猫的学习报告\n📊 累计答题 ${state.stats.answered} 道\n🎯 正确率 ${accuracy}%\n🔥 最高连击 ${state.player.maxCombo}\n📅 已学习 ${calcLearningDays()} 天\n🎒 等级 Lv.${state.player.level}\n\n——来自数学王国`;
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(text).then(() => showToast("成绩已复制到剪贴板，快去分享给朋友吧！"));
+  } else {
+    showToast(`累计 ${state.stats.answered} 题，正确率 ${accuracy}%`);
+  }
+}
+
 function renderHome() {
   const accuracy = getAccuracy(state.stats);
   $("comboHome").textContent = state.player.combo;
@@ -2156,6 +2330,7 @@ function renderHome() {
     { text: "查看一次学习报告", done: false }
   ];
   $("dailyTasks").innerHTML = dailyTasks.map(t => `<li>${t.done ? "✅" : "⬜"} ${t.text}</li>`).join("");
+  renderCat();
 }
 
 function renderMap() {
@@ -3221,6 +3396,7 @@ function answerQuestion(value, btn) {
     showEffect(`-${damage}`);
     showToast(`答对了！Boss 受到 ${damage} 点伤害。`);
     damageMonster(currentQuestion.skill);
+    if (state.player.combo >= 3) { catLastMessage = ""; catContext = "combo"; }
     if (state.boss.hp <= 0) clearLevel();
   } else {
     state.player.combo = 0;
@@ -3229,6 +3405,7 @@ function answerQuestion(value, btn) {
     addWrong(value === null ? "超时" : value, currentQuestion);
     showEffect("MISS");
     showToast(`答错了，正确答案是 ${currentQuestion.answer}。已加入错题本。`);
+    catLastMessage = ""; catContext = "wrong";
   }
 
   checkAchievements();
@@ -3262,11 +3439,13 @@ function answerPracticeQuestion(value, btn) {
     SFX.correct();
     showToast("练习答对了！获得金币和经验。");
     damageMonster(currentPracticeQuestion.skill);
+    if (state.player.combo >= 3) { catLastMessage = ""; catContext = "combo"; }
   } else {
     state.player.combo = 0;
     SFX.wrong();
     addWrong(value === "" ? "未填写" : value, currentPracticeQuestion);
     showToast(`练习答错了，正确答案是 ${currentPracticeQuestion.answer}。已加入错题本。`);
+    catLastMessage = ""; catContext = "wrong";
   }
 
   if (state.practice.challenge === "exam") {
@@ -3297,6 +3476,7 @@ function damageMonster(skill) {
     state.player.xp += 15;
     showToast(`🎉 击败了「${monster.name}」！获得 20 金币 + 15 经验！`);
     SFX.bossDefeat();
+    catLastMessage = ""; catContext = "monster_kill";
   } else {
     showToast(`⚔️ 「${monster.name}」受到攻击！剩余血量 ${monster.currentHp}/${monster.totalHp}`);
   }
@@ -3376,6 +3556,7 @@ function clearLevel() {
   const world = getCurrentWorld();
   SFX.bossDefeat();
   SFX.levelUp();
+  catLastMessage = ""; catContext = "boss_clear";
   adventureQuestionBag = [];
   state.player.coin += 50;
   state.player.diamond += 1;
@@ -3834,6 +4015,8 @@ function bindActions() {
   $("clearWrongBtn").addEventListener("click", clearWrongbook);
   $("challengeMonsterBtn").addEventListener("click", challengeMonster);
   $("clearDefeatedBtn").addEventListener("click", clearDefeatedMonsters);
+  $("catEncourageBtn").addEventListener("click", () => { catLastMessage = ""; catContext = "encourage"; renderCat(); });
+  $("catShareBtn").addEventListener("click", shareCatScore);
   $("exportBtn").addEventListener("click", exportSave);
   $("importBtn").addEventListener("click", importSave);
   $("resetBtn").addEventListener("click", resetGame);
