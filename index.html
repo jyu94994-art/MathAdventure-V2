@@ -1929,21 +1929,31 @@ function renderHome() {
 
 function renderMap() {
   $("worldGrid").innerHTML = DATA.worlds.map(world => {
-    const unlocked = world.id <= state.player.currentWorld;
     const current = world.id === state.player.currentWorld;
     return `
-      <article class="world-card ${unlocked ? "" : "locked"}">
+      <article class="world-card" onclick="selectWorld(${world.id})" style="cursor:pointer;">
         <div class="world-icon">${world.icon}</div>
         <h3>${world.name}</h3>
         <p>${world.grade} · ${world.focus}</p>
         <div class="world-meta">
-          <span class="tag">${unlocked ? "已解锁" : "未解锁"}</span>
           <span class="tag">${current ? `当前第 ${state.player.currentLevel} 关` : "10 关挑战"}</span>
           <span class="tag">Boss ${world.boss}</span>
         </div>
       </article>
     `;
   }).join("");
+}
+
+function selectWorld(worldId) {
+  const world = DATA.worlds.find(w => w.id === worldId);
+  if (!world) return;
+  state.player.currentWorld = worldId;
+  state.player.currentLevel = 1;
+  state.boss.hp = 100;
+  state.boss.maxHp = 100;
+  saveState();
+  switchView("battle");
+  showToast(`进入 ${world.name}！准备挑战 Boss ${world.boss}`);
 }
 
 function renderBattleStatus() {
@@ -2405,8 +2415,8 @@ function buildMathQuestion(skillId = pickSkill(), questionType = "choice", grade
       const a = rand(1000, 9999), b = rand(1000, 9999);
       answer = a + b; text = `${a} + ${b} = ?`; explain = `${a} + ${b} = ${answer}。`;
     } else if (grade <= 5) {
-      const a = (rand(11, 99) / 10).toFixed(1), b = (rand(11, 99) / 10).toFixed(1);
-      answer = ((parseFloat(a) + parseFloat(b))).toFixed(1); text = `${a} + ${b} = ?`; explain = `${a} + ${b} = ${answer}。`;
+      const a = Math.round((rand(11, 99) / 10) * 10) / 10, b = Math.round((rand(11, 99) / 10) * 10) / 10;
+      answer = Math.round((a + b) * 10) / 10; text = `${a} + ${b} = ?`; explain = `${a} + ${b} = ${answer}。`;
     } else {
       const a = rand(100, 999), b = rand(100, 999), c = rand(10, 99);
       answer = a + b - c; text = `${a} + ${b} - ${c} = ?`; explain = `${a} + ${b} - ${c} = ${answer}。`;
@@ -2425,10 +2435,10 @@ function buildMathQuestion(skillId = pickSkill(), questionType = "choice", grade
       const a = rand(5000, 99999), b = rand(1000, a);
       answer = a - b; text = `${a} - ${b} = ?`; explain = `${a} - ${b} = ${answer}。`;
     } else if (grade <= 5) {
-      const a = (rand(51, 999) / 10).toFixed(1), b = (rand(11, 500) / 10).toFixed(1);
+      const a = Math.round((rand(51, 999) / 10) * 10) / 10, b = Math.round((rand(11, 500) / 10) * 10) / 10;
       const av = parseFloat(a), bv = parseFloat(b);
-      answer = (Math.max(av, bv) - Math.min(av, bv)).toFixed(1);
-      text = `${Math.max(av,bv).toFixed(1)} - ${Math.min(av,bv).toFixed(1)} = ?`; explain = `小数减法，答案是 ${answer}。`;
+      answer = Math.round((Math.max(av, bv) - Math.min(av, bv)) * 10) / 10;
+      text = `${Math.max(av,bv)} - ${Math.min(av,bv)} = ?`; explain = `小数减法，答案是 ${answer}。`;
     } else {
       const a = rand(1000, 9999), b = rand(100, 999);
       answer = a - b; text = `${a} - ${b} = ?`; explain = `${a} - ${b} = ${answer}。`;
@@ -2447,8 +2457,8 @@ function buildMathQuestion(skillId = pickSkill(), questionType = "choice", grade
       const a = rand(12, 99), b = rand(12, 99);
       answer = a * b; text = `${a} × ${b} = ?`; explain = `两位数乘法：${a} × ${b} = ${answer}。`;
     } else if (grade <= 5) {
-      const a = (rand(12, 99) / 10).toFixed(1), b = rand(2, 9);
-      answer = (parseFloat(a) * b).toFixed(1); text = `${a} × ${b} = ?`; explain = `小数乘法：${a} × ${b} = ${answer}。`;
+      const a = Math.round((rand(12, 99) / 10) * 10) / 10, b = rand(2, 9);
+      answer = Math.round(a * b * 10) / 10; text = `${a} × ${b} = ?`; explain = `小数乘法：${a} × ${b} = ${answer}。`;
     } else {
       const a = rand(11, 25), b = rand(11, 25);
       answer = a * b; text = `${a} × ${b} = ?`; explain = `两位数乘法：${a} × ${b} = ${answer}。`;
@@ -2500,20 +2510,22 @@ function buildMathQuestion(skillId = pickSkill(), questionType = "choice", grade
       answer = speed * time; text = `一辆车每小时行 ${speed} 千米，${time} 小时行多少千米？`; explain = `路程 = 速度 × 时间 = ${speed} × ${time} = ${answer} 千米。`;
     } else if (grade <= 5) {
       const total = rand(50, 200), part = rand(2, 9);
-      answer = Math.round(total / part * 10) / 10; text = `把 ${total} 米长的绳子平均分成 ${part} 段，每段多少米？`; explain = `${total} ÷ ${part} ≈ ${answer} 米。`;
+      answer = Math.round(total / part * 10) / 10; text = `把 ${total} 米长的绳子平均分成 ${part} 段，每段多少米？`; explain = `${total} ÷ ${part} = ${answer} 米。`;
     } else {
       const original = rand(50, 300), discount = rand(10, 50);
-      answer = Math.round(original * discount / 100 * 10) / 10; text = `一件商品原价 ${original} 元，打 ${discount} 折，便宜了多少钱？`; explain = `便宜了 ${original} × (1 - ${discount}/100) = ${Math.round((original - answer) * 10) / 10} 元。`;
+      const saved = Math.round(original * (100 - discount) / 100);
+      answer = saved; text = `一件商品原价 ${original} 元，打 ${discount} 折，便宜了多少钱？`; explain = `原价 ${original} 元，现价 ${original * discount / 100} 元，便宜了 ${saved} 元。`;
     }
     skill = "word";
   }
 
   if (questionType === "judge") {
     const displayed = Math.random() > 0.5 ? answer : Math.max(0, answer + (rand(1, Math.max(6, answer)) * (Math.random() > 0.5 ? 1 : -1)));
+    const displayText = text.replace(/[\?？]/g, String(displayed));
     return {
       skill,
       type: "judge",
-      text: `判断：${text.replace("?", displayed)} 这个结论是否正确？`,
+      text: `判断：${displayText} 这个结论是否正确？`,
       answer: displayed === answer ? "正确" : "错误",
       options: ["正确", "错误"],
       explain: displayed === answer ? `判断正确。${explain}` : `判断错误。正确结果应该是 ${answer}。${explain}`
@@ -2521,7 +2533,7 @@ function buildMathQuestion(skillId = pickSkill(), questionType = "choice", grade
   }
 
   if (questionType === "fill") {
-    return { skill, type: "fill", text: text.replace("?", "____"), answer: String(answer), options: [], explain };
+    return { skill, type: "fill", text: text.replace(/[\?？]/g, "____"), answer: String(answer), options: [], explain };
   }
 
   const options = makeOptions(answer);
