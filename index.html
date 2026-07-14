@@ -2386,53 +2386,130 @@ function nextAdventureQuestionType() {
 
 function buildMathQuestion(skillId = pickSkill(), questionType = "choice", gradeOverride = null) {
   const grade = gradeOverride || state.player.currentWorld;
-  const max = 10 + grade * 12;
-  const a = rand(2, max);
-  const b = rand(2, Math.max(8, Math.floor(max / 2)));
   let text = "";
   let answer = 0;
   let explain = "";
   let skill = skillId;
 
   if (skill === "add") {
-    answer = a + b;
-    text = `${a} + ${b} = ?`;
-    explain = `把两个数相加：${a} + ${b} = ${answer}。`;
+    if (grade <= 1) {
+      const a = rand(1, 9), b = rand(1, 9);
+      answer = a + b; text = `${a} + ${b} = ?`; explain = `${a} + ${b} = ${answer}。`;
+    } else if (grade <= 2) {
+      const a = rand(10, 50), b = rand(10, 50);
+      answer = a + b; text = `${a} + ${b} = ?`; explain = `${a} + ${b} = ${answer}。`;
+    } else if (grade <= 3) {
+      const a = rand(100, 500), b = rand(100, 500);
+      answer = a + b; text = `${a} + ${b} = ?`; explain = `${a} + ${b} = ${answer}。`;
+    } else if (grade <= 4) {
+      const a = rand(1000, 9999), b = rand(1000, 9999);
+      answer = a + b; text = `${a} + ${b} = ?`; explain = `${a} + ${b} = ${answer}。`;
+    } else if (grade <= 5) {
+      const a = (rand(11, 99) / 10).toFixed(1), b = (rand(11, 99) / 10).toFixed(1);
+      answer = ((parseFloat(a) + parseFloat(b))).toFixed(1); text = `${a} + ${b} = ?`; explain = `${a} + ${b} = ${answer}。`;
+    } else {
+      const a = rand(100, 999), b = rand(100, 999), c = rand(10, 99);
+      answer = a + b - c; text = `${a} + ${b} - ${c} = ?`; explain = `${a} + ${b} - ${c} = ${answer}。`;
+    }
   } else if (skill === "sub") {
-    const big = Math.max(a, b);
-    const small = Math.min(a, b);
-    answer = big - small;
-    text = `${big} - ${small} = ?`;
-    explain = `用较大的数减去较小的数：${big} - ${small} = ${answer}。`;
+    if (grade <= 1) {
+      const a = rand(2, 10), b = rand(1, a);
+      answer = a - b; text = `${a} - ${b} = ?`; explain = `${a} - ${b} = ${answer}。`;
+    } else if (grade <= 2) {
+      const a = rand(20, 99), b = rand(1, a);
+      answer = a - b; text = `${a} - ${b} = ?`; explain = `${a} - ${b} = ${answer}。`;
+    } else if (grade <= 3) {
+      const a = rand(200, 999), b = rand(100, a);
+      answer = a - b; text = `${a} - ${b} = ?`; explain = `${a} - ${b} = ${answer}。`;
+    } else if (grade <= 4) {
+      const a = rand(5000, 99999), b = rand(1000, a);
+      answer = a - b; text = `${a} - ${b} = ?`; explain = `${a} - ${b} = ${answer}。`;
+    } else if (grade <= 5) {
+      const a = (rand(51, 999) / 10).toFixed(1), b = (rand(11, 500) / 10).toFixed(1);
+      const av = parseFloat(a), bv = parseFloat(b);
+      answer = (Math.max(av, bv) - Math.min(av, bv)).toFixed(1);
+      text = `${Math.max(av,bv).toFixed(1)} - ${Math.min(av,bv).toFixed(1)} = ?`; explain = `小数减法，答案是 ${answer}。`;
+    } else {
+      const a = rand(1000, 9999), b = rand(100, 999);
+      answer = a - b; text = `${a} - ${b} = ?`; explain = `${a} - ${b} = ${answer}。`;
+    }
   } else if (skill === "mul") {
-    const x = rand(2, Math.min(12, 4 + grade * 2));
-    const y = rand(2, Math.min(12, 4 + grade * 2));
-    answer = x * y;
-    text = `${x} × ${y} = ?`;
-    explain = `乘法表示 ${x} 个 ${y} 相加，结果是 ${answer}。`;
+    if (grade <= 1) {
+      const a = rand(1, 5), b = rand(1, 5);
+      answer = a * b; text = `${a} × ${b} = ?`; explain = `${a} × ${b} = ${answer}。`;
+    } else if (grade <= 2) {
+      const a = rand(2, 9), b = rand(2, 9);
+      answer = a * b; text = `${a} × ${b} = ?`; explain = `乘法口诀：${a} × ${b} = ${answer}。`;
+    } else if (grade <= 3) {
+      const a = rand(12, 99), b = rand(2, 9);
+      answer = a * b; text = `${a} × ${b} = ?`; explain = `${a} × ${b} = ${answer}。`;
+    } else if (grade <= 4) {
+      const a = rand(12, 99), b = rand(12, 99);
+      answer = a * b; text = `${a} × ${b} = ?`; explain = `两位数乘法：${a} × ${b} = ${answer}。`;
+    } else if (grade <= 5) {
+      const a = (rand(12, 99) / 10).toFixed(1), b = rand(2, 9);
+      answer = (parseFloat(a) * b).toFixed(1); text = `${a} × ${b} = ?`; explain = `小数乘法：${a} × ${b} = ${answer}。`;
+    } else {
+      const a = rand(11, 25), b = rand(11, 25);
+      answer = a * b; text = `${a} × ${b} = ?`; explain = `两位数乘法：${a} × ${b} = ${answer}。`;
+    }
   } else if (skill === "div") {
-    const y = rand(2, Math.min(12, 4 + grade * 2));
-    const q = rand(2, Math.min(12, 4 + grade * 2));
-    answer = q;
-    text = `${y * q} ÷ ${y} = ?`;
-    explain = `因为 ${y} × ${q} = ${y * q}，所以答案是 ${q}。`;
+    if (grade <= 2) {
+      const b = rand(2, 5), q = rand(2, 9);
+      answer = q; text = `${b * q} ÷ ${b} = ?`; explain = `因为 ${b} × ${q} = ${b * q}，所以 ${b * q} ÷ ${b} = ${q}。`;
+    } else if (grade <= 3) {
+      const b = rand(2, 9), q = rand(2, 9);
+      answer = q; text = `${b * q} ÷ ${b} = ?`; explain = `因为 ${b} × ${q} = ${b * q}，所以答案 = ${q}。`;
+    } else if (grade <= 4) {
+      const b = rand(11, 25), q = rand(2, 9);
+      answer = q; text = `${b * q} ÷ ${b} = ?`; explain = `因为 ${b} × ${q} = ${b * q}，所以答案 = ${q}。`;
+    } else if (grade <= 5) {
+      const b = rand(2, 9), q = rand(2, 9);
+      answer = q; text = `小明有 ${b * q} 元，平均分给 ${b} 人，每人多少元？`; explain = `${b * q} ÷ ${b} = ${q} 元。`;
+    } else {
+      const b = rand(6, 20), q = rand(6, 20);
+      answer = q; text = `${b * q} ÷ ${b} = ?`; explain = `因为 ${b} × ${q} = ${b * q}，所以答案 = ${q}。`;
+    }
   } else if (skill === "geo") {
-    const length = rand(3, 8 + grade);
-    const width = rand(2, 6 + grade);
-    answer = length * width;
-    text = `长方形长 ${length} 米，宽 ${width} 米，面积是多少平方米？`;
-    explain = `长方形面积 = 长 × 宽 = ${length} × ${width} = ${answer}。`;
+    if (grade <= 2) {
+      const length = rand(2, 9), width = rand(2, 9);
+      answer = length * width; text = `长方形长 ${length} 米，宽 ${width} 米，面积是多少？`; explain = `面积 = ${length} × ${width} = ${answer} 平方米。`;
+    } else if (grade <= 4) {
+      const length = rand(5, 20), width = rand(3, 15);
+      answer = length * width; text = `长方形长 ${length} 米，宽 ${width} 米，面积是多少？`; explain = `面积 = ${length} × ${width} = ${answer} 平方米。`;
+    } else if (grade <= 5) {
+      const r = rand(2, 10);
+      answer = Math.round(Math.PI * r * r * 100) / 100;
+      text = `圆的半径是 ${r} 厘米，面积是多少？（π取3.14）`; explain = `圆面积 = π × r² = 3.14 × ${r}² = ${answer} 平方厘米。`;
+    } else {
+      const l = rand(4, 15), w = rand(3, 10), h = rand(2, 8);
+      answer = l * w * h; text = `长方体长 ${l}、宽 ${w}、高 ${h}，体积是多少？`; explain = `体积 = ${l} × ${w} × ${h} = ${answer}。`;
+    }
   } else {
-    const each = rand(3, 10 + grade);
-    const count = rand(2, 8 + grade);
-    answer = each * count;
-    text = `每个宝箱有 ${each} 枚金币，${count} 个宝箱一共有多少枚金币？`;
-    explain = `${count} 个宝箱，每个 ${each} 枚，${each} × ${count} = ${answer}。`;
+    if (grade <= 1) {
+      const each = rand(1, 5), count = rand(2, 5);
+      answer = each * count; text = `树上有 ${count} 个鸟窝，每个窝有 ${each} 只小鸟，一共多少只？`; explain = `${count} × ${each} = ${answer} 只。`;
+    } else if (grade <= 2) {
+      const each = rand(3, 9), count = rand(3, 9);
+      answer = each * count; text = `每个宝箱有 ${each} 枚金币，${count} 个宝箱一共多少枚？`; explain = `${each} × ${count} = ${answer} 枚。`;
+    } else if (grade <= 3) {
+      const total = rand(20, 99), each = rand(3, 9);
+      answer = Math.floor(total / each); text = `有 ${total} 颗糖，每 ${each} 颗装一袋，能装几袋？`; explain = `${total} ÷ ${each} = ${answer} 袋。`;
+    } else if (grade <= 4) {
+      const speed = rand(40, 120), time = rand(2, 8);
+      answer = speed * time; text = `一辆车每小时行 ${speed} 千米，${time} 小时行多少千米？`; explain = `路程 = 速度 × 时间 = ${speed} × ${time} = ${answer} 千米。`;
+    } else if (grade <= 5) {
+      const total = rand(50, 200), part = rand(2, 9);
+      answer = Math.round(total / part * 10) / 10; text = `把 ${total} 米长的绳子平均分成 ${part} 段，每段多少米？`; explain = `${total} ÷ ${part} ≈ ${answer} 米。`;
+    } else {
+      const original = rand(50, 300), discount = rand(10, 50);
+      answer = Math.round(original * discount / 100 * 10) / 10; text = `一件商品原价 ${original} 元，打 ${discount} 折，便宜了多少钱？`; explain = `便宜了 ${original} × (1 - ${discount}/100) = ${Math.round((original - answer) * 10) / 10} 元。`;
+    }
     skill = "word";
   }
 
   if (questionType === "judge") {
-    const displayed = Math.random() > 0.5 ? answer : Math.max(0, answer + (rand(1, 6) * (Math.random() > 0.5 ? 1 : -1)));
+    const displayed = Math.random() > 0.5 ? answer : Math.max(0, answer + (rand(1, Math.max(6, answer)) * (Math.random() > 0.5 ? 1 : -1)));
     return {
       skill,
       type: "judge",
@@ -2444,11 +2521,11 @@ function buildMathQuestion(skillId = pickSkill(), questionType = "choice", grade
   }
 
   if (questionType === "fill") {
-    return { skill, type: "fill", text: text.replace("?", "____"), answer, options: [], explain };
+    return { skill, type: "fill", text: text.replace("?", "____"), answer: String(answer), options: [], explain };
   }
 
   const options = makeOptions(answer);
-  return { skill, type: "choice", text, answer, options, explain };
+  return { skill, type: "choice", text, answer: String(answer), options, explain };
 }
 
 function buildPracticeQuestion() {
@@ -2668,11 +2745,19 @@ function resetChallenge() {
 }
 
 function makeOptions(answer) {
+  const num = parseFloat(answer);
+  const isDecimal = num % 1 !== 0;
   const set = new Set([answer]);
   while (set.size < 4) {
     const delta = rand(-10, 10) || 1;
-    const value = Math.max(0, answer + delta);
-    set.add(value);
+    let value;
+    if (isDecimal) {
+      value = (Math.round((num + delta) * 10) / 10).toFixed(1);
+      if (parseFloat(value) < 0) value = (Math.abs(parseFloat(value))).toFixed(1);
+    } else {
+      value = Math.max(0, Math.round(num + delta));
+    }
+    if (value !== answer) set.add(value);
   }
   return Array.from(set).sort(() => Math.random() - 0.5);
 }
