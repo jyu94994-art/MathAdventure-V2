@@ -570,6 +570,71 @@ p { color: var(--muted); line-height: 1.7; }
   opacity: .7;
 }
 
+/* 剧情地图 */
+.story-map {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  padding: 20px 0 40px;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.story-node {
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+  padding: 18px 22px;
+  border-radius: 22px;
+  background: rgba(255,255,255,0.05);
+  border: 2px solid rgba(255,255,255,0.1);
+  cursor: pointer;
+  transition: transform .2s, border-color .2s, box-shadow .2s;
+}
+.story-node:hover { transform: translateY(-3px); border-color: rgba(255,255,255,0.25); box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
+
+.story-node.current { border-color: var(--amber); box-shadow: 0 0 20px rgba(255,170,0,0.2); }
+.story-node.cleared { border-color: var(--green); }
+.story-node.cleared::after { content: "\2705"; position: absolute; top: 12px; right: 16px; font-size: 1.2rem; }
+
+.story-node-head { display: flex; align-items: center; gap: 14px; margin-bottom: 8px; }
+.story-node-icon { font-size: 2.2rem; }
+.story-node-head h3 { font-size: 1.15rem; margin: 0; }
+.story-node-head .chapter-tag { font-size: 0.75rem; color: var(--amber); margin-left: auto; }
+.story-node p { color: var(--muted); font-size: 0.9rem; margin: 4px 0 0; }
+.story-node .quest-text { color: var(--ink); font-size: 0.85rem; margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.06); }
+
+.story-path {
+  width: 2px;
+  height: 32px;
+  background: repeating-linear-gradient(to bottom, rgba(255,255,255,0.15) 0, rgba(255,255,255,0.15) 4px, transparent 4px, transparent 8px);
+}
+
+/* 剧情对话弹窗 */
+.story-dialog { position: fixed; inset: 0; z-index: 999; display: grid; place-items: center; }
+.story-dialog.hidden { display: none; }
+.story-dialog-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); }
+.story-dialog-box {
+  position: relative;
+  width: min(480px, 92vw);
+  padding: 28px;
+  border-radius: 24px;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  box-shadow: 0 24px 64px rgba(0,0,0,0.5);
+  animation: dialogIn .35s ease;
+}
+@keyframes dialogIn { from { opacity: 0; transform: scale(0.9) translateY(20px); } to { opacity: 1; transform: none; } }
+
+.story-dialog-title { text-align: center; font-size: 1.1rem; color: var(--amber); margin-bottom: 16px; font-weight: 700; }
+.story-dialog-content { display: flex; gap: 16px; align-items: flex-start; margin-bottom: 20px; }
+.story-dialog-avatar { font-size: 2.8rem; flex-shrink: 0; }
+.story-dialog-bubble { flex: 1; }
+.story-dialog-bubble b { color: var(--ink); display: block; margin-bottom: 6px; }
+.story-dialog-bubble p { color: var(--muted); line-height: 1.7; min-height: 60px; }
+.story-dialog-box button { margin-top: 4px; }
+
 .world-card .world-icon {
   font-size: 3.2rem;
   margin-bottom: 12px;
@@ -848,6 +913,41 @@ p { color: var(--muted); line-height: 1.7; }
 .wrong-item b { color: var(--ink); }
 .wrong-item p { margin: 6px 0 0; }
 
+.monster-list { display: grid; gap: 12px; margin-top: 16px; }
+.monster-list h3 { margin: 8px 0 4px; color: var(--ink); }
+
+.monster-card {
+  display: grid;
+  grid-template-columns: 64px 1fr;
+  gap: 16px;
+  align-items: center;
+  padding: 16px;
+  border-radius: 18px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.06);
+}
+.monster-card.active { border-color: rgba(245,81,95,0.3); background: rgba(245,81,95,0.06); }
+.monster-card.defeated { opacity: 0.6; }
+
+.monster-icon { font-size: 2.5rem; text-align: center; }
+.monster-info b { color: var(--ink); font-size: 1.1rem; }
+.monster-info p { margin: 4px 0 0; color: var(--muted); }
+.monster-info .hint { color: var(--amber); font-size: 0.9rem; }
+
+.hp-bar {
+  height: 10px;
+  border-radius: 5px;
+  background: rgba(255,255,255,0.1);
+  margin-top: 8px;
+  overflow: hidden;
+}
+.hp-bar div {
+  height: 100%;
+  border-radius: 5px;
+  background: var(--danger);
+  transition: width 0.3s ease;
+}
+
 .pet-card {
   display: grid;
   grid-template-columns: 220px 1fr;
@@ -996,7 +1096,9 @@ textarea {
   .dashboard-grid,
   .account-grid,
   .report-grid,
-  .world-grid { grid-template-columns: repeat(2, 1fr); }
+  .world-grid,
+  .story-map { grid-template-columns: repeat(2, 1fr); }
+  .story-map { max-width: 360px; display: flex; flex-direction: column; }
 }
 
 @media (max-width: 720px) {
@@ -1010,7 +1112,6 @@ textarea {
   .dashboard-grid,
   .account-grid,
   .report-grid,
-  .world-grid,
   .answer-grid,
   .fill-answer,
   .quick-grid,
@@ -1084,11 +1185,12 @@ textarea {
       <aside class="sidebar">
         <button class="nav active" data-view="home">🏰 游戏大厅</button>
         <button class="nav" data-view="account">👤 账号中心</button>
-        <button class="nav" data-view="map">🗺️ 世界地图</button>
+        <button class="nav" data-view="map">🗺️ 冒险地图</button>
         <button class="nav" data-view="battle">⚔️ 开始冒险</button>
         <button class="nav" data-view="practice">✍️ 练习模式</button>
         <button class="nav" data-view="english">🅰️ 英语冒险</button>
         <button class="nav" data-view="wrongbook">📒 错题本</button>
+        <button class="nav" data-view="monster">👾 怪兽巢穴</button>
         <button class="nav" data-view="pet">🐾 宠物</button>
         <button class="nav" data-view="shop">🛒 商城</button>
         <button class="nav" data-view="achievements">🏅 成就</button>
@@ -1101,8 +1203,8 @@ textarea {
         <section id="home" class="view active">
           <div class="hero-card">
             <div>
-              <p class="eyebrow">小学 1～6 年级 · 游戏化数学学习</p>
-              <h2>答题、闯关、打 Boss，升级你的数学战斗力</h2>
+              <p class="eyebrow">拯救数学王国 · 六章冒险剧情</p>
+              <h2>答题闯关，打败 Boss，拯救数学王国</h2>
               <p>选择世界地图进入关卡，答对题目获得经验和金币。系统会根据你的正确率自动调整题型，让你重点练习薄弱内容。</p>
               <div class="hero-actions">
                 <button class="primary" data-jump="battle">开始冒险</button>
@@ -1139,6 +1241,7 @@ textarea {
               <h3>快捷入口</h3>
               <div class="quick-grid">
                 <button data-jump="wrongbook">错题复练</button>
+                <button data-jump="monster">怪兽巢穴</button>
                 <button data-jump="practice">练习模式</button>
                 <button data-jump="pet">培养宠物</button>
                 <button data-jump="shop">购买道具</button>
@@ -1184,12 +1287,12 @@ textarea {
         <section id="map" class="view">
           <div class="section-head">
             <div>
-              <p class="eyebrow">World Map</p>
-              <h2>六大数学世界</h2>
+              <p class="eyebrow">Story Mode</p>
+              <h2>拯救数学王国</h2>
             </div>
-            <p>每个世界对应一个年级，完成关卡可解锁后续地图。</p>
+            <p>黑暗力量侵蚀了数学王国，勇者啊，通过数学挑战恢复世界的力量吧！</p>
           </div>
-          <div id="worldGrid" class="world-grid"></div>
+          <div id="storyMap" class="story-map"></div>
         </section>
 
         <section id="battle" class="view">
@@ -1350,6 +1453,23 @@ textarea {
               <button class="secondary" id="clearWrongBtn">清空错题</button>
             </div>
             <div id="wrongList" class="wrong-list"></div>
+          </div>
+        </section>
+
+        <section id="monster" class="view">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Monster Den</p>
+              <h2>👾 错题怪兽巢穴</h2>
+            </div>
+            <p>错题会孵化出怪兽！每答对5道同类型题目即可消灭一只怪兽。</p>
+          </div>
+          <div class="panel">
+            <div class="toolbar">
+              <button class="primary" id="challengeMonsterBtn">挑战活跃怪兽</button>
+              <button class="secondary" id="clearDefeatedBtn">清除已消灭</button>
+            </div>
+            <div id="monsterList" class="monster-list"></div>
           </div>
         </section>
 
@@ -1522,6 +1642,21 @@ textarea {
     </main>
   </div>
 
+  <div id="storyDialog" class="story-dialog hidden">
+    <div class="story-dialog-backdrop"></div>
+    <div class="story-dialog-box">
+      <div class="story-dialog-title" id="storyTitle"></div>
+      <div class="story-dialog-content">
+        <span class="story-dialog-avatar" id="storyAvatar"></span>
+        <div class="story-dialog-bubble">
+          <b id="storySpeaker"></b>
+          <p id="storyText"></p>
+        </div>
+      </div>
+      <button class="primary full" id="storyDialogBtn">继续冒险 ▶</button>
+    </div>
+  </div>
+
   <div id="toast" class="toast"></div>
 
   <div id="soundToggle" style="position:fixed;bottom:20px;right:20px;z-index:9999;width:48px;height:48px;border-radius:50%;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);backdrop-filter:blur(12px);display:grid;place-items:center;cursor:pointer;font-size:1.4rem;box-shadow:0 4px 16px rgba(0,0,0,0.3);transition:all .15s ease;" onclick="toggleSound()">🔇</div>
@@ -1669,13 +1804,105 @@ function toggleSound() { SFX.toggle(); }
 
 window.MathAdventureData = {
   worlds: [
-    { id: 1, name: "森林王国", grade: "一年级", icon: "🌲", boss: "🐺", focus: "20以内加减法", color: "#2fac66" },
-    { id: 2, name: "海洋世界", grade: "二年级", icon: "🌊", boss: "🦈", focus: "表内乘除法", color: "#2f88ff" },
-    { id: 3, name: "沙漠探险", grade: "三年级", icon: "🏜️", boss: "🦂", focus: "多位数运算", color: "#ffb13d" },
-    { id: 4, name: "冰雪王国", grade: "四年级", icon: "❄️", boss: "🐻‍❄️", focus: "混合运算", color: "#5fb9ff" },
-    { id: 5, name: "天空之城", grade: "五年级", icon: "☁️", boss: "🦅", focus: "小数与几何", color: "#8a6cff" },
-    { id: 6, name: "宇宙空间", grade: "六年级", icon: "🪐", boss: "👾", focus: "分数百分数", color: "#263144" }
+    { id: 1, name: "新手村", grade: "一年级", icon: "🏘️", boss: "🐺", focus: "20以内加减法", color: "#2fac66", npc: "🧙‍♂️", chapter: "第一章" },
+    { id: 2, name: "数字森林", grade: "二年级", icon: "🌳", boss: "🦈", focus: "表内乘除法", color: "#2f88ff", npc: "🧝", chapter: "第二章" },
+    { id: 3, name: "分数海洋", grade: "三年级", icon: "🌊", boss: "🦂", focus: "多位数运算", color: "#ffb13d", npc: "🧜", chapter: "第三章" },
+    { id: 4, name: "方程城堡", grade: "四年级", icon: "🏰", boss: "🐻‍❄️", focus: "混合运算", color: "#5fb9ff", npc: "🤴", chapter: "第四章" },
+    { id: 5, name: "几何天空城", grade: "五年级", icon: "☁️", boss: "🦅", focus: "小数与几何", color: "#8a6cff", npc: "👸", chapter: "第五章" },
+    { id: 6, name: "数学王宫", grade: "六年级", icon: "👑", boss: "👾", focus: "分数百分数", color: "#263144", npc: "👑", chapter: "终章" }
   ],
+  story: {
+    prologue: {
+      speaker: "🧙‍♂️ 数学老者",
+      text: "勇敢的孩子，欢迎来到数学王国！黑暗力量侵蚀了整个王国，数字失去了魔力，世界陷入了混乱。只有你能拯救这一切！通过数学挑战，恢复每个世界的力量吧！",
+      title: "序章：黑暗降临"
+    },
+    chapters: {
+      1: {
+        intro: {
+          speaker: "🧙‍♂️ 村长",
+          text: "这里是新手村，黑暗魔物正在破坏基础的数字力量。打败 Boss 灰狼，恢复加减法的力量！每答对一题，Boss 就会受伤！",
+          title: "第一章：新手村的考验"
+        },
+        victory: {
+          speaker: "🧙‍♂️ 村长",
+          text: "太棒了！你打败了灰狼，新手村的数字力量恢复了！前方是数字森林，那里有更强大的敌人在等着你。去吧，勇敢的孩子！",
+          title: "新手村已被解放！"
+        },
+        quest: "打败灰狼 Boss，恢复加减法的力量"
+      },
+      2: {
+        intro: {
+          speaker: "🧝 森林精灵",
+          text: "欢迎来到数字森林！黑暗力量让乘法和除法变得混乱不堪。打败 Boss 虎鲨，恢复数学规律的力量！",
+          title: "第二章：数字森林的秘密"
+        },
+        victory: {
+          speaker: "🧝 森林精灵",
+          text: "太厉害了！乘除法的力量已经恢复，森林重新焕发生机！但大海那边还有更大的危机……",
+          title: "数字森林已被解放！"
+        },
+        quest: "打败虎鲨 Boss，恢复乘除法的力量"
+      },
+      3: {
+        intro: {
+          speaker: "🧜 海洋守卫",
+          text: "分数海洋被黑暗力量搅得天翻地覆！多位数的运算秩序完全崩塌了。打败 Boss 沙蝎，恢复大海的平静！",
+          title: "第三章：分数海洋的风暴"
+        },
+        victory: {
+          speaker: "🧜 海洋守卫",
+          text: "海洋恢复了平静！你的力量越来越强了。远处那座被黑暗笼罩的城堡，就是下一个目标！",
+          title: "分数海洋已被解放！"
+        },
+        quest: "打败沙蝎 Boss，恢复多位数运算的力量"
+      },
+      4: {
+        intro: {
+          speaker: "🤴 城堡王子",
+          text: "方程城堡已被黑暗魔王占领！混合运算的法则被完全扭曲。只有打败冰熊将军，才能夺回城堡！",
+          title: "第四章：方程城堡之战"
+        },
+        victory: {
+          speaker: "🤴 城堡王子",
+          text: "你夺回了城堡！黑暗力量正在退缩。但最终决战还在前方——几何天空城和数学王宫！",
+          title: "方程城堡已被解放！"
+        },
+        quest: "打败冰熊 Boss，恢复混合运算的力量"
+      },
+      5: {
+        intro: {
+          speaker: "👸 天空公主",
+          text: "几何天空城漂浮在云端之上。黑暗力量扭曲了小数和几何的规则。打败风暴之鹰，恢复天空的秩序！",
+          title: "第五章：几何天空城的决战"
+        },
+        victory: {
+          speaker: "👸 天空公主",
+          text: "天空城的光辉重现了！最终战场——数学王宫就在前方。黑暗之源就在那里，准备迎接最终决战吧！",
+          title: "几何天空城已被解放！"
+        },
+        quest: "打败风暴鹰 Boss，恢复小数与几何的力量"
+      },
+      6: {
+        intro: {
+          speaker: "👑 数学国王",
+          text: "你就是那个一路闯关的勇者！黑暗之源就在王宫深处。打败暗影魔，彻底恢复数学王国的力量！这将是最终的决战！",
+          title: "终章：数学王宫的终极之战"
+        },
+        victory: {
+          speaker: "👑 数学国王",
+          text: "恭喜你，勇者！黑暗力量被彻底消灭了！数学王国恢复了往日的辉煌。你将被永远铭记为——数学王国的大英雄！",
+          title: "通关：数学王国得救了！"
+        },
+        quest: "打败暗影魔，彻底消灭黑暗力量"
+      }
+    },
+    finale: {
+      speaker: "📢 全王国",
+      text: "恭喜通关！你拯救了整个数学王国！你已成为传说中伟大的数学勇者！继续挑战练习模式和英语冒险，让你的数学之魂永不熄灭！",
+      title: "传说终结：英雄诞生"
+    }
+  },
   skills: [
     { id: "add", name: "加法" },
     { id: "sub", name: "减法" },
@@ -1785,6 +2012,8 @@ const defaultState = {
     }
   },
   wrongbook: [],
+  monsters: [],
+  storyCleared: {},
   achievements: {},
   practice: { type: "mixed", grade: 1, answered: 0, correct: 0, subject: "math", challenge: null },
   english: { currentWorld: 1, currentLevel: 1, bossHp: 100, bossMaxHp: 100, combo: 0, answered: 0, correct: 0 },
@@ -1876,6 +2105,7 @@ function switchView(id) {
   if (id === "battle" || id === "english") { SFX.startBGM(); }
   else { SFX.stopBGM(); }
   renderAll();
+  if (id === "map") checkPrologue();
 }
 
 function bindNavigation() {
@@ -1892,6 +2122,7 @@ function renderAll() {
   renderPractice();
   renderEnglishStatus();
   renderWrongbook();
+  renderMonsters();
   renderPet();
   renderShop();
   renderAchievements();
@@ -1928,20 +2159,97 @@ function renderHome() {
 }
 
 function renderMap() {
-  $("worldGrid").innerHTML = DATA.worlds.map(world => {
+  if (!state.storyCleared) state.storyCleared = {};
+  const worlds = DATA.worlds;
+  const story = DATA.story;
+  let html = "";
+  worlds.forEach((world, i) => {
     const current = world.id === state.player.currentWorld;
-    return `
-      <article class="world-card" onclick="selectWorld(${world.id})" style="cursor:pointer;">
-        <div class="world-icon">${world.icon}</div>
-        <h3>${world.name}</h3>
-        <p>${world.grade} · ${world.focus}</p>
-        <div class="world-meta">
-          <span class="tag">${current ? `当前第 ${state.player.currentLevel} 关` : "10 关挑战"}</span>
-          <span class="tag">Boss ${world.boss}</span>
+    const cleared = state.storyCleared[world.id];
+    const cls = cleared ? "story-node cleared" : current ? "story-node current" : "story-node";
+    html += `
+      <div class="${cls}" onclick="enterChapter(${world.id})">
+        <div class="story-node-head">
+          <span class="story-node-icon">${world.icon}</span>
+          <h3>${world.name}</h3>
+          <span class="chapter-tag">${world.chapter}</span>
         </div>
-      </article>
+        <p>${world.grade} · ${world.focus}</p>
+        <p class="quest-text">📋 ${story.chapters[world.id].quest}</p>
+      </div>
     `;
-  }).join("");
+    if (i < worlds.length - 1) html += `<div class="story-path"></div>`;
+  });
+  $("storyMap").innerHTML = html;
+}
+
+// 剧情对话系统
+let storyDialogCallback = null;
+let typewriterTimer = null;
+let storyFullText = "";
+let storyTypingDone = false;
+
+function showStoryDialog(config, callback) {
+  const dialog = $("storyDialog");
+  $("storyTitle").textContent = config.title || "";
+  $("storyAvatar").textContent = config.speaker ? config.speaker.split(" ")[0] : "";
+  $("storySpeaker").textContent = config.speaker || "";
+  
+  const textEl = $("storyText");
+  storyFullText = config.text;
+  textEl.textContent = "";
+  storyTypingDone = false;
+  let idx = 0;
+  clearInterval(typewriterTimer);
+  typewriterTimer = setInterval(() => {
+    if (idx < storyFullText.length) {
+      textEl.textContent += storyFullText[idx];
+      idx++;
+    } else {
+      clearInterval(typewriterTimer);
+      typewriterTimer = null;
+      storyTypingDone = true;
+    }
+  }, 35);
+  
+  storyDialogCallback = callback;
+  dialog.classList.remove("hidden");
+}
+
+function closeStoryDialog() {
+  if (!storyTypingDone) {
+    clearInterval(typewriterTimer);
+    typewriterTimer = null;
+    storyTypingDone = true;
+    $("storyText").textContent = storyFullText;
+    return;
+  }
+  $("storyDialog").classList.add("hidden");
+  if (typeof storyDialogCallback === "function") {
+    const cb = storyDialogCallback;
+    storyDialogCallback = null;
+    cb();
+  }
+}
+
+function enterChapter(worldId) {
+  const story = DATA.story.chapters[worldId];
+  if (!story) return selectWorld(worldId);
+  showStoryDialog(story.intro, () => selectWorld(worldId));
+}
+
+// 首次进入地图时显示序章
+let prologueShown = false;
+function checkPrologue() {
+  if (!state.storyCleared) state.storyCleared = {};
+  if (prologueShown || state.storyCleared.prologue) return;
+  if (state.stats.answered === 0) {
+    prologueShown = true;
+    showStoryDialog(DATA.story.prologue, () => {
+      state.storyCleared.prologue = true;
+      saveState();
+    });
+  }
 }
 
 function selectWorld(worldId) {
@@ -1953,7 +2261,7 @@ function selectWorld(worldId) {
   state.boss.maxHp = 100;
   saveState();
   switchView("battle");
-  showToast(`进入 ${world.name}！准备挑战 Boss ${world.boss}`);
+  showToast(`⚔️ 进入${world.name}！击败 ${world.boss} 恢复${world.focus}的力量！`);
 }
 
 function renderBattleStatus() {
@@ -2088,6 +2396,44 @@ function renderWrongbook() {
       <p>解析：${item.explain}</p>
     </div>
   `).join("");
+}
+
+function renderMonsters() {
+  const active = state.monsters.filter(m => !m.defeated);
+  const defeated = state.monsters.filter(m => m.defeated);
+  let html = "";
+
+  if (active.length) {
+    html += `<h3>🔥 活跃怪兽（${active.length}只）</h3>`;
+    html += active.map(m => `
+      <div class="monster-card active">
+        <div class="monster-icon">👾</div>
+        <div class="monster-info">
+          <b>${m.name}</b>
+          <p>弱点：${m.skillLabel} · 血量：${m.currentHp}/${m.totalHp}</p>
+          <div class="hp-bar"><div style="width:${(m.currentHp/m.totalHp)*100}%"></div></div>
+          <p class="hint">击败方法：答对5道${m.skillLabel}题</p>
+        </div>
+      </div>
+    `).join("");
+  } else {
+    html += `<h3>✨ 当前没有活跃怪兽</h3><p>继续加油，保持全对！</p>`;
+  }
+
+  if (defeated.length) {
+    html += `<h3>🏆 已消灭（${defeated.length}只）</h3>`;
+    html += defeated.map(m => `
+      <div class="monster-card defeated">
+        <div class="monster-icon">💀</div>
+        <div class="monster-info">
+          <b>${m.name}</b>
+          <p>弱点：${m.skillLabel} · 消灭于 ${m.defeatedAt}</p>
+        </div>
+      </div>
+    `).join("");
+  }
+
+  $("monsterList").innerHTML = html;
 }
 
 function renderPet() {
@@ -2400,6 +2746,7 @@ function buildMathQuestion(skillId = pickSkill(), questionType = "choice", grade
   let answer = 0;
   let explain = "";
   let skill = skillId;
+  let statement = ""; // 用于判断题的陈述文本
 
   if (skill === "add") {
     if (grade <= 1) {
@@ -2476,6 +2823,7 @@ function buildMathQuestion(skillId = pickSkill(), questionType = "choice", grade
     } else if (grade <= 5) {
       const b = rand(2, 9), q = rand(2, 9);
       answer = q; text = `小明有 ${b * q} 元，平均分给 ${b} 人，每人多少元？`; explain = `${b * q} ÷ ${b} = ${q} 元。`;
+      statement = `小明有 ${b * q} 元，平均分给 ${b} 人，每人 ${q} 元`;
     } else {
       const b = rand(6, 20), q = rand(6, 20);
       answer = q; text = `${b * q} ÷ ${b} = ?`; explain = `因为 ${b} × ${q} = ${b * q}，所以答案 = ${q}。`;
@@ -2484,48 +2832,58 @@ function buildMathQuestion(skillId = pickSkill(), questionType = "choice", grade
     if (grade <= 2) {
       const length = rand(2, 9), width = rand(2, 9);
       answer = length * width; text = `长方形长 ${length} 米，宽 ${width} 米，面积是多少？`; explain = `面积 = ${length} × ${width} = ${answer} 平方米。`;
+      statement = `长方形长 ${length} 米，宽 ${width} 米，面积是 ${answer} 平方米`;
     } else if (grade <= 4) {
       const length = rand(5, 20), width = rand(3, 15);
       answer = length * width; text = `长方形长 ${length} 米，宽 ${width} 米，面积是多少？`; explain = `面积 = ${length} × ${width} = ${answer} 平方米。`;
+      statement = `长方形长 ${length} 米，宽 ${width} 米，面积是 ${answer} 平方米`;
     } else if (grade <= 5) {
       const r = rand(2, 10);
       answer = Math.round(Math.PI * r * r * 100) / 100;
       text = `圆的半径是 ${r} 厘米，面积是多少？（π取3.14）`; explain = `圆面积 = π × r² = 3.14 × ${r}² = ${answer} 平方厘米。`;
+      statement = `圆的半径是 ${r} 厘米，面积是 ${answer} 平方厘米（π取3.14）`;
     } else {
       const l = rand(4, 15), w = rand(3, 10), h = rand(2, 8);
       answer = l * w * h; text = `长方体长 ${l}、宽 ${w}、高 ${h}，体积是多少？`; explain = `体积 = ${l} × ${w} × ${h} = ${answer}。`;
+      statement = `长方体长 ${l}、宽 ${w}、高 ${h}，体积是 ${answer}`;
     }
   } else {
     if (grade <= 1) {
       const each = rand(1, 5), count = rand(2, 5);
       answer = each * count; text = `树上有 ${count} 个鸟窝，每个窝有 ${each} 只小鸟，一共多少只？`; explain = `${count} × ${each} = ${answer} 只。`;
+      statement = `树上有 ${count} 个鸟窝，每个窝有 ${each} 只小鸟，一共 ${answer} 只`;
     } else if (grade <= 2) {
       const each = rand(3, 9), count = rand(3, 9);
       answer = each * count; text = `每个宝箱有 ${each} 枚金币，${count} 个宝箱一共多少枚？`; explain = `${each} × ${count} = ${answer} 枚。`;
+      statement = `每个宝箱有 ${each} 枚金币，${count} 个宝箱一共 ${answer} 枚`;
     } else if (grade <= 3) {
       const total = rand(20, 99), each = rand(3, 9);
       answer = Math.floor(total / each); text = `有 ${total} 颗糖，每 ${each} 颗装一袋，能装几袋？`; explain = `${total} ÷ ${each} = ${answer} 袋。`;
+      statement = `有 ${total} 颗糖，每 ${each} 颗装一袋，能装 ${answer} 袋`;
     } else if (grade <= 4) {
       const speed = rand(40, 120), time = rand(2, 8);
       answer = speed * time; text = `一辆车每小时行 ${speed} 千米，${time} 小时行多少千米？`; explain = `路程 = 速度 × 时间 = ${speed} × ${time} = ${answer} 千米。`;
+      statement = `一辆车每小时行 ${speed} 千米，${time} 小时行 ${answer} 千米`;
     } else if (grade <= 5) {
       const total = rand(50, 200), part = rand(2, 9);
       answer = Math.round(total / part * 10) / 10; text = `把 ${total} 米长的绳子平均分成 ${part} 段，每段多少米？`; explain = `${total} ÷ ${part} = ${answer} 米。`;
+      statement = `把 ${total} 米长的绳子平均分成 ${part} 段，每段 ${answer} 米`;
     } else {
-      const original = rand(50, 300), discount = rand(10, 50);
-      const saved = Math.round(original * (100 - discount) / 100);
-      answer = saved; text = `一件商品原价 ${original} 元，打 ${discount} 折，便宜了多少钱？`; explain = `原价 ${original} 元，现价 ${original * discount / 100} 元，便宜了 ${saved} 元。`;
+      const original = rand(50, 300), discount = rand(1, 9);
+      const saved = Math.round(original * (10 - discount) / 10);
+      answer = saved; text = `一件商品原价 ${original} 元，打 ${discount} 折，便宜了多少钱？`; explain = `原价 ${original} 元，打 ${discount} 折后现价 ${Math.round(original * discount / 10 * 10) / 10} 元，便宜了 ${saved} 元。`;
+      statement = `一件商品原价 ${original} 元，打 ${discount} 折，便宜了 ${saved} 元`;
     }
     skill = "word";
   }
 
   if (questionType === "judge") {
     const displayed = Math.random() > 0.5 ? answer : Math.max(0, answer + (rand(1, Math.max(6, answer)) * (Math.random() > 0.5 ? 1 : -1)));
-    const displayText = text.replace(/[\?？]/g, String(displayed));
+    const judgeText = statement ? statement.replace(String(answer), String(displayed)) : text.replace(/[\?？]/g, String(displayed));
     return {
       skill,
       type: "judge",
-      text: `判断：${displayText} 这个结论是否正确？`,
+      text: `判断：${judgeText}。这个结论是否正确？`,
       answer: displayed === answer ? "正确" : "错误",
       options: ["正确", "错误"],
       explain: displayed === answer ? `判断正确。${explain}` : `判断错误。正确结果应该是 ${answer}。${explain}`
@@ -2862,6 +3220,7 @@ function answerQuestion(value, btn) {
     if (state.player.combo >= 3) SFX.combo();
     showEffect(`-${damage}`);
     showToast(`答对了！Boss 受到 ${damage} 点伤害。`);
+    damageMonster(currentQuestion.skill);
     if (state.boss.hp <= 0) clearLevel();
   } else {
     state.player.combo = 0;
@@ -2902,6 +3261,7 @@ function answerPracticeQuestion(value, btn) {
     gainReward();
     SFX.correct();
     showToast("练习答对了！获得金币和经验。");
+    damageMonster(currentPracticeQuestion.skill);
   } else {
     state.player.combo = 0;
     SFX.wrong();
@@ -2924,6 +3284,22 @@ function answerPracticeQuestion(value, btn) {
   saveState();
   renderAll();
   currentPracticeQuestion = null;
+}
+
+function damageMonster(skill) {
+  const monster = state.monsters.find(m => m.skill === skill && !m.defeated);
+  if (!monster) return;
+  monster.currentHp -= 1;
+  if (monster.currentHp <= 0) {
+    monster.defeated = true;
+    monster.defeatedAt = new Date().toLocaleString();
+    state.player.coin += 20;
+    state.player.xp += 15;
+    showToast(`🎉 击败了「${monster.name}」！获得 20 金币 + 15 经验！`);
+    SFX.bossDefeat();
+  } else {
+    showToast(`⚔️ 「${monster.name}」受到攻击！剩余血量 ${monster.currentHp}/${monster.totalHp}`);
+  }
 }
 
 function gainReward() {
@@ -2951,6 +3327,31 @@ function gainReward() {
   }
 }
 
+const MONSTER_NAMES = {
+  add: ["粗心小怪", "加法迷糊", "漏算幽灵", "进位恶魔"],
+  sub: ["借位怪", "减法迷糊", "粗心小怪", "退位幽灵"],
+  mul: ["口诀怪", "乘法迷糊", "粗心小怪", "背错恶魔"],
+  div: ["除法怪", "分配迷糊", "粗心小怪", "余数幽灵"],
+  geo: ["图形怪", "面积迷糊", "粗心小怪", "体积恶魔"],
+  word: ["应用题怪", "读题迷糊", "粗心小怪", "理解恶魔"]
+};
+
+function spawnMonster(skill) {
+  const names = MONSTER_NAMES[skill] || MONSTER_NAMES.word;
+  const name = names[Math.floor(Math.random() * names.length)];
+  const skillLabels = { add: "加法", sub: "减法", mul: "乘法", div: "除法", geo: "几何", word: "应用题" };
+  state.monsters.push({
+    id: Date.now(),
+    name,
+    skill,
+    skillLabel: skillLabels[skill] || "数学",
+    totalHp: 5,
+    currentHp: 5,
+    createdAt: new Date().toLocaleString(),
+    defeated: false
+  });
+}
+
 function addWrong(userAnswer, question = currentQuestion) {
   if (!question) return;
   state.wrongbook.push({
@@ -2962,24 +3363,64 @@ function addWrong(userAnswer, question = currentQuestion) {
     explain: question.explain
   });
   if (state.wrongbook.length > 50) state.wrongbook.shift();
+
+  // 错题生成怪兽：如果该技能没有活跃的怪兽，就生成一个
+  const hasActiveMonster = state.monsters.some(m => m.skill === question.skill && !m.defeated);
+  if (!hasActiveMonster) {
+    spawnMonster(question.skill);
+    showToast(`⚠️ 错题怪兽「${MONSTER_NAMES[question.skill][0]}」出现了！快去消灭它！`);
+  }
 }
 
 function clearLevel() {
   const world = getCurrentWorld();
-  showToast(`击败 ${world.name} Boss！获得通关奖励。`);
   SFX.bossDefeat();
   SFX.levelUp();
   adventureQuestionBag = [];
   state.player.coin += 50;
   state.player.diamond += 1;
   state.boss.hp = state.boss.maxHp;
+  
+  // 标记章节通关
+  if (!state.storyCleared) state.storyCleared = {};
+  state.storyCleared[world.id] = true;
+  
+  const story = DATA.story.chapters[world.id];
+  
   if (state.player.currentLevel < 10) {
     state.player.currentLevel += 1;
+    showToast(`击败了 ${world.boss}！第 ${state.player.currentLevel} 关开始！`);
   } else if (state.player.currentWorld < DATA.worlds.length) {
+    // 通关当前世界，显示胜利剧情
     state.player.currentWorld += 1;
     state.player.currentLevel = 1;
+    if (story && story.victory) {
+      showStoryDialog(story.victory, () => {
+        saveState();
+        renderAll();
+        switchView("map");
+      });
+    } else {
+      saveState();
+      renderAll();
+      switchView("map");
+    }
+    submitScore(true);
+    return; // 不执行下面的submitScore
   } else {
-    state.player.title = "数学大师";
+    // 通关最后一个世界
+    state.player.title = "数学王国大英雄";
+    if (story && story.victory) {
+      showStoryDialog(story.victory, () => {
+        showStoryDialog(DATA.story.finale, () => {
+          saveState();
+          renderAll();
+          switchView("map");
+        });
+      });
+    }
+    submitScore(true);
+    return;
   }
   submitScore(true);
 }
@@ -3103,6 +3544,27 @@ function clearWrongbook() {
   saveState();
   renderAll();
   showToast("错题本已清空。");
+}
+
+function challengeMonster() {
+  const active = state.monsters.filter(m => !m.defeated);
+  if (!active.length) return showToast("当前没有活跃怪兽，继续保持全对！");
+  const monster = active[0];
+  switchView("practice");
+  setPracticeSubject("math");
+  setPracticeType("mixed");
+  state.practice.grade = state.player.currentWorld;
+  generatePracticeQuestion();
+  showToast(`挑战「${monster.name}」！答对${monster.skillLabel}题来消灭它！`);
+}
+
+function clearDefeatedMonsters() {
+  if (!state.monsters.some(m => m.defeated)) return showToast("没有已消灭的怪兽。");
+  if (!confirm("确定清除所有已消灭的怪兽记录吗？")) return;
+  state.monsters = state.monsters.filter(m => !m.defeated);
+  saveState();
+  renderAll();
+  showToast("已清除消灭记录。");
 }
 
 function checkAchievements() {
@@ -3343,10 +3805,12 @@ let englishTimeLeft = 30;
 
 function bindActions() {
   document.addEventListener("click", (e) => {
-    if (e.target.closest("button") || e.target.closest(".nav") || e.target.closest(".practice-mode") || e.target.closest(".world-card")) {
+    if (e.target.closest("button") || e.target.closest(".nav") || e.target.closest(".practice-mode") || e.target.closest(".world-card") || e.target.closest(".story-node")) {
       SFX.click();
     }
   });
+  $("storyDialogBtn").addEventListener("click", closeStoryDialog);
+  $("storyDialog").querySelector(".story-dialog-backdrop").addEventListener("click", closeStoryDialog);
   $("newQuestionBtn").addEventListener("click", () => {
     if (state.player.stamina <= 0) return showToast("体力不足，请稍后恢复或使用复活卡。");
     generateQuestion();
@@ -3368,6 +3832,8 @@ function bindActions() {
   $("feedPetBtn").addEventListener("click", feedPet);
   $("practiceWrongBtn").addEventListener("click", practiceWrong);
   $("clearWrongBtn").addEventListener("click", clearWrongbook);
+  $("challengeMonsterBtn").addEventListener("click", challengeMonster);
+  $("clearDefeatedBtn").addEventListener("click", clearDefeatedMonsters);
   $("exportBtn").addEventListener("click", exportSave);
   $("importBtn").addEventListener("click", importSave);
   $("resetBtn").addEventListener("click", resetGame);
