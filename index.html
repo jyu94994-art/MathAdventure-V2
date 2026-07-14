@@ -18,6 +18,7 @@
   --green: #43e97b;
   --danger: #f5515f;
   --gold: #ffd700;
+  --amber: #ffaa00;
   --purple: #a855f7;
   --shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
   --glow-primary: 0 0 20px rgba(255,107,53,0.3);
@@ -51,6 +52,20 @@ button {
 
 button:hover { transform: translateY(-2px); filter: brightness(1.1); }
 button:active { transform: translateY(0); filter: brightness(0.95); }
+button { position: relative; overflow: hidden; }
+button::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at var(--cx, 50%) var(--cy, 50%), rgba(255,255,255,0.3) 0%, transparent 60%);
+  opacity: 0;
+  transform: scale(0);
+  transition: opacity .4s, transform .4s;
+  pointer-events: none;
+  border-radius: inherit;
+}
+button:active { transform: scale(0.97) translateY(0); filter: brightness(0.95); }
+button:active::after { opacity: 1; transform: scale(2); transition: opacity 0s, transform 0s; }
 
 .app {
   width: min(1440px, calc(100% - 28px));
@@ -182,13 +197,13 @@ button:active { transform: translateY(0); filter: brightness(0.95); }
 .player-strip {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 10px;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255,255,255,0.1);
-  border-radius: 26px;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-  backdrop-filter: blur(16px);
+  gap: 14px;
+  padding: 12px 18px;
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 20px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.05);
 }
 
 .online-status {
@@ -208,30 +223,115 @@ button:active { transform: translateY(0); filter: brightness(0.95); }
   background: linear-gradient(135deg, var(--green), var(--blue));
 }
 
+.rpg-avatar-wrap { position: relative; flex-shrink: 0; }
 .avatar {
-  width: 48px;
-  height: 48px;
+  width: 52px;
+  height: 52px;
   border-radius: 18px;
   background: linear-gradient(135deg, var(--purple), var(--blue));
-  font-size: 1.7rem;
-  box-shadow: 0 4px 16px rgba(168,85,247,0.3);
+  font-size: 1.8rem;
+  box-shadow: 0 4px 20px rgba(168,85,247,0.35);
+  border: 2px solid rgba(255,255,255,0.15);
+  transition: transform .2s, box-shadow .2s;
+}
+.avatar:hover { transform: scale(1.08); box-shadow: 0 6px 28px rgba(168,85,247,0.5); }
+
+.rpg-level-badge {
+  position: absolute;
+  bottom: -4px;
+  right: -6px;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 6px;
+  border-radius: 12px;
+  background: var(--amber);
+  color: #1a1a2e;
+  font-size: .7rem;
+  font-weight: 800;
+  display: grid;
+  place-items: center;
+  border: 2px solid var(--surface);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
 }
 
-.identity { min-width: 116px; }
-.identity strong { display: block; color: #fff; }
-.identity span { display: block; color: var(--muted); font-size: .82rem; }
-
-.resource {
-  min-width: 64px;
-  padding: 8px 10px;
-  text-align: center;
-  background: rgba(255,255,255,0.06);
-  border-radius: 18px;
-  border: 1px solid rgba(255,255,255,0.1);
+.rpg-identity { min-width: 140px; flex: 1; }
+.rpg-identity strong { display: block; color: #fff; font-size: 1rem; }
+.rpg-title {
+  display: inline-block;
+  color: var(--amber);
+  font-size: .75rem;
+  padding: 2px 10px;
+  border-radius: 10px;
+  background: rgba(255,170,0,0.1);
+  border: 1px solid rgba(255,170,0,0.2);
+  margin-top: 3px;
 }
 
-.resource b { display: block; color: var(--gold); }
-.resource span { display: block; color: var(--muted); font-size: .75rem; }
+.rpg-xp-bar { margin-top: 6px; }
+.rpg-xp-track {
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(255,255,255,0.08);
+  overflow: hidden;
+}
+.rpg-xp-fill {
+  height: 100%;
+  border-radius: 3px;
+  background: linear-gradient(90deg, var(--green), var(--blue));
+  box-shadow: 0 0 8px rgba(67,233,123,0.3);
+  transition: width .4s ease;
+}
+.rpg-xp-bar small {
+  display: block;
+  color: var(--muted);
+  font-size: .68rem;
+  margin-top: 3px;
+}
+
+.rpg-streak {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 12px;
+  border-radius: 14px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.06);
+  min-width: 56px;
+  transition: border-color .2s, box-shadow .2s;
+}
+.rpg-streak.hot {
+  border-color: rgba(255,100,50,0.3);
+  box-shadow: 0 0 16px rgba(255,100,50,0.15);
+  animation: streakPulse 2s ease-in-out infinite;
+}
+@keyframes streakPulse {
+  0%,100% { box-shadow: 0 0 8px rgba(255,100,50,0.1); }
+  50% { box-shadow: 0 0 20px rgba(255,100,50,0.25); }
+}
+.rpg-streak span { font-size: 1.2rem; }
+.rpg-streak b { color: var(--ink); font-size: .95rem; }
+.rpg-streak small { color: var(--muted); font-size: .6rem; }
+
+.rpg-resources {
+  display: flex;
+  gap: 8px;
+}
+.rpg-res {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 10px;
+  min-width: 48px;
+  border-radius: 14px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.06);
+  transition: transform .15s, border-color .15s;
+}
+.rpg-res:hover { transform: translateY(-2px); border-color: rgba(255,255,255,0.15); }
+.rpg-res b { color: var(--gold); font-size: .95rem; }
+.rpg-res span { font-size: .85rem; }
 
 .layout {
   display: grid;
@@ -310,17 +410,22 @@ button:active { transform: translateY(0); filter: brightness(0.95); }
 }
 
 .hero-card {
+  position: relative;
   display: grid;
-  grid-template-columns: 1.15fr .85fr;
-  gap: 26px;
-  min-height: 360px;
-  padding: 34px;
-  border-radius: 30px;
-  background: linear-gradient(135deg, rgba(255,107,53,0.15), rgba(79,172,254,0.1), rgba(168,85,247,0.08));
-  border: 1px solid rgba(255,255,255,0.1);
-  box-shadow: 0 12px 48px rgba(0,0,0,0.3);
-  backdrop-filter: blur(16px);
+  grid-template-columns: 1fr 220px;
+  gap: 28px;
+  align-items: center;
+  padding: 32px;
+  border-radius: 28px;
+  background: rgba(255,255,255,0.04);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.08);
+  box-shadow: 0 8px 40px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.04);
   overflow: hidden;
+  transition: box-shadow .3s ease;
+}
+.hero-card:hover {
+  box-shadow: 0 12px 48px rgba(0,0,0,0.35), 0 0 30px rgba(168,85,247,0.1), inset 0 1px 0 rgba(255,255,255,0.06);
 }
 
 .eyebrow {
@@ -468,10 +573,17 @@ p { color: var(--muted); line-height: 1.7; }
 
 .panel {
   padding: 22px;
-  border-radius: 26px;
-  background: rgba(255,255,255,0.05);
+  border-radius: 24px;
+  background: rgba(255,255,255,0.04);
+  backdrop-filter: blur(8px);
   border: 1px solid rgba(255,255,255,0.08);
-  box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04);
+  transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
+}
+.panel:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.3), 0 0 20px rgba(168,85,247,0.08), inset 0 1px 0 rgba(255,255,255,0.06);
+  border-color: rgba(255,255,255,0.12);
 }
 
 .clean-list {
@@ -1131,7 +1243,9 @@ textarea {
   .section-head { align-items: stretch; flex-direction: column; }
   .auth-card { grid-template-columns: 1fr; }
   .auth-intro { min-height: auto; }
-  .player-strip { flex-wrap: wrap; }
+  .player-strip { flex-wrap: wrap; gap: 10px; padding: 10px 14px; }
+  .rpg-identity { min-width: auto; }
+  .rpg-resources { flex-wrap: wrap; }
   .layout { grid-template-columns: 1fr; }
   .sidebar {
     position: static;
@@ -1168,7 +1282,8 @@ textarea {
   .content { padding: 10px; }
   .hero-card,
   .panel { padding: 18px; }
-  .resource { min-width: calc(50% - 6px); }
+  .rpg-res { min-width: calc(33% - 6px); }
+  .rpg-streak { min-width: auto; padding: 4px 10px; }
   .progress-line,
   .hp-row,
   .report-row,
@@ -1217,15 +1332,28 @@ textarea {
       </div>
       <div class="online-status" id="onlineStatus">离线试玩模式</div>
       <div class="player-strip">
-        <button class="avatar" id="avatarBtn" title="切换头像">🧙</button>
-        <div class="identity">
-          <strong id="playerName">小冒险家</strong>
-          <span id="playerTitle">新手探险者</span>
+        <div class="rpg-avatar-wrap">
+          <button class="avatar" id="avatarBtn" title="切换头像">🧙</button>
+          <span class="rpg-level-badge" id="levelValue">1</span>
         </div>
-        <div class="resource"><b id="levelValue">1</b><span>等级</span></div>
-        <div class="resource"><b id="coinValue">0</b><span>金币</span></div>
-        <div class="resource"><b id="diamondValue">0</b><span>钻石</span></div>
-        <div class="resource"><b id="staminaValue">20</b><span>体力</span></div>
+        <div class="rpg-identity">
+          <strong id="playerName">小冒险家</strong>
+          <span class="rpg-title" id="playerTitle">新手探险者</span>
+          <div class="rpg-xp-bar">
+            <div class="rpg-xp-track"><div class="rpg-xp-fill" id="xpHeaderFill"></div></div>
+            <small id="xpHeaderText">0 / 100 XP</small>
+          </div>
+        </div>
+        <div class="rpg-streak" id="streakBlock">
+          <span>🔥</span>
+          <b id="streakValue">1</b>
+          <small>连续学习</small>
+        </div>
+        <div class="rpg-resources">
+          <div class="rpg-res"><b id="coinValue">0</b><span>💰</span></div>
+          <div class="rpg-res"><b id="diamondValue">0</b><span>💎</span></div>
+          <div class="rpg-res"><b id="staminaValue">20</b><span>⚡</span></div>
+        </div>
       </div>
     </header>
 
@@ -2203,6 +2331,15 @@ function renderHeader() {
   $("diamondValue").textContent = p.diamond;
   $("staminaValue").textContent = p.stamina;
   $$(".avatar, .player-sprite").forEach(el => el.textContent = p.avatars[p.avatarIndex]);
+  // RPG 状态栏
+  $("xpHeaderFill").style.width = `${Math.min(100, p.xp)}%`;
+  $("xpHeaderText").textContent = `${p.xp} / 100 XP`;
+  const streak = calcLearningDays();
+  $("streakValue").textContent = streak;
+  const streakBlock = $("streakBlock");
+  if (streakBlock) {
+    streakBlock.classList.toggle("hot", streak >= 7);
+  }
 }
 
 // ===== 小数猫 AI 学习伙伴 =====
@@ -3986,7 +4123,14 @@ let englishTimeLeft = 30;
 
 function bindActions() {
   document.addEventListener("click", (e) => {
-    if (e.target.closest("button") || e.target.closest(".nav") || e.target.closest(".practice-mode") || e.target.closest(".world-card") || e.target.closest(".story-node")) {
+    const btn = e.target.closest("button");
+    if (btn) {
+      SFX.click();
+      // 波纹效果
+      const rect = btn.getBoundingClientRect();
+      btn.style.setProperty("--cx", `${((e.clientX - rect.left) / rect.width) * 100}%`);
+      btn.style.setProperty("--cy", `${((e.clientY - rect.top) / rect.height) * 100}%`);
+    } else if (e.target.closest(".nav") || e.target.closest(".practice-mode") || e.target.closest(".world-card") || e.target.closest(".story-node")) {
       SFX.click();
     }
   });
