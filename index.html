@@ -42,6 +42,8 @@ body {
   overflow-x: hidden;
 }
 
+#starfield { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+
 button, input, textarea { font: inherit; }
 
 button {
@@ -71,6 +73,8 @@ button:active::after { opacity: 1; transform: scale(2); transition: opacity 0s, 
   width: min(1440px, calc(100% - 28px));
   margin: 0 auto;
   padding: 20px 0 32px;
+  position: relative;
+  z-index: 1;
 }
 
 .app.locked {
@@ -458,8 +462,6 @@ p { color: var(--muted); line-height: 1.7; }
   margin-top: 22px;
 }
 
-.primary,
-.secondary,
 .danger-btn {
   padding: 12px 18px;
   border-radius: 16px;
@@ -467,23 +469,34 @@ p { color: var(--muted); line-height: 1.7; }
 }
 
 .primary {
+  padding: 12px 24px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, var(--purple), var(--blue));
   color: #fff;
-  background: linear-gradient(135deg, var(--primary), #ff8c42, var(--purple));
-  background-size: 200% 200%;
-  animation: gradient-shift 3s ease infinite;
-  box-shadow: var(--glow-primary);
-  text-shadow: 0 1px 4px rgba(0,0,0,0.2);
+  font-weight: 900;
+  box-shadow: 0 4px 16px rgba(168, 85, 247, 0.35);
+  transition: transform .15s, box-shadow .2s, filter .2s;
+}
+.primary:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 28px rgba(168, 85, 247, 0.5), 0 0 20px rgba(168,85,247,0.25);
+  filter: brightness(1.1);
 }
 
 .secondary {
+  padding: 12px 24px;
+  border-radius: 16px;
+  background: rgba(255,255,255,0.06);
   color: var(--ink);
-  background: rgba(255,255,255,0.08);
   border: 1px solid rgba(255,255,255,0.15);
+  font-weight: 700;
+  transition: transform .15s, box-shadow .2s, border-color .2s, background .2s;
 }
-
 .secondary:hover {
-  background: rgba(255,255,255,0.14);
-  box-shadow: var(--glow-blue);
+  transform: translateY(-3px);
+  border-color: rgba(255,255,255,0.3);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.3), 0 0 16px rgba(168,85,247,0.15);
+  background: rgba(255,255,255,0.1);
 }
 
 .danger-btn {
@@ -678,7 +691,15 @@ p { color: var(--muted); line-height: 1.7; }
   box-shadow: 0 0 12px rgba(67,233,123,0.4);
 }
 
-.bar.danger i { background: linear-gradient(90deg, var(--danger), var(--primary)); box-shadow: 0 0 12px rgba(245,81,95,0.4); }
+.bar.danger i { background: linear-gradient(90deg, var(--danger), var(--primary)); box-shadow: 0 0 12px rgba(245,81,95,0.4); transition: width .4s cubic-bezier(.34,1.56,.64,1); }
+.bar.danger.shaking i { animation: hpShake .3s ease; }
+@keyframes hpShake {
+  0%,100% { transform: translateX(0); }
+  20% { transform: translateX(-4px); }
+  40% { transform: translateX(4px); }
+  60% { transform: translateX(-3px); }
+  80% { transform: translateX(2px); }
+}
 
 .quick-grid,
 .shop-grid,
@@ -1011,6 +1032,31 @@ p { color: var(--muted); line-height: 1.7; }
   100% { opacity: 0; transform: translate(-50%, -90%) scale(1); }
 }
 
+.combo-big {
+  animation: comboScale .5s ease;
+  color: var(--amber) !important;
+}
+@keyframes comboScale {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.8); }
+  100% { transform: scale(1); }
+}
+
+/* 屏幕震动 */
+.screen-shake { animation: shake .35s ease; }
+@keyframes shake {
+  0%,100% { transform: translate(0); }
+  10% { transform: translate(-4px, 2px); }
+  20% { transform: translate(4px, -1px); }
+  30% { transform: translate(-3px, -2px); }
+  40% { transform: translate(3px, 1px); }
+  50% { transform: translate(-2px, -1px); }
+  60% { transform: translate(2px, 1px); }
+  70% { transform: translate(-1px, 0); }
+  80% { transform: translate(1px, 0); }
+  90% { transform: translate(0, -1px); }
+}
+
 .hp-row {
   display: grid;
   grid-template-columns: 86px 1fr auto;
@@ -1236,6 +1282,52 @@ textarea {
 .toast.show {
   opacity: 1;
   transform: translateX(-50%) translateY(0);
+}
+
+.achievement-popup {
+  position: fixed; inset: 0; z-index: 9999;
+  display: grid; place-items: center;
+  background: rgba(0,0,0,0.6);
+  animation: fadeIn .3s ease;
+}
+.achievement-popup.fade-out { animation: fadeOut .5s ease forwards; }
+.achievement-popup-card {
+  padding: 36px 44px;
+  border-radius: 28px;
+  background: linear-gradient(135deg, #1a1a3e, #2d1b4e);
+  border: 2px solid rgba(255,215,0,0.4);
+  box-shadow: 0 24px 64px rgba(0,0,0,0.5), 0 0 40px rgba(255,215,0,0.2);
+  text-align: center;
+  animation: popIn .5s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes popIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+.ach-popup-icon { font-size: 4rem; margin-bottom: 8px; animation: achIconBounce .6s ease infinite alternate; }
+@keyframes achIconBounce { from { transform: translateY(0); } to { transform: translateY(-10px); } }
+.achievement-popup-card h2 { color: var(--gold); margin: 0 0 8px; }
+.achievement-popup-card b { color: var(--ink); font-size: 1.3rem; }
+.achievement-popup-card p { color: var(--muted); margin: 6px 0; }
+.achievement-popup-card small { color: var(--amber); }
+
+@keyframes confettiFall {
+  0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+}
+.confetti { position: fixed; z-index: 10000; pointer-events: none; }
+
+.chest-animation {
+  position: fixed; top: 50%; left: 50%; z-index: 9998;
+  transform: translate(-50%,-50%);
+  pointer-events: none;
+}
+.chest-icon { font-size: 5rem; display: block; animation: chestBounce .6s ease infinite alternate; }
+.chest-animation.open .chest-icon { animation: chestOpen .8s ease forwards; }
+@keyframes chestBounce { from { transform: scale(1) rotate(-5deg); } to { transform: scale(1.1) rotate(5deg); } }
+@keyframes chestOpen {
+  0% { transform: scale(1.1) rotate(5deg); }
+  50% { transform: scale(1.5) rotate(0deg); opacity: 1; }
+  100% { transform: scale(2); opacity: 0; }
 }
 
 @media (max-width: 1100px) {
@@ -2291,6 +2383,40 @@ function showToast(message) {
   setTimeout(() => toast.classList.remove("show"), 2200);
 }
 
+function showAchievementPopup(achievement) {
+  // 创建彩带粒子
+  const colors = ["#ff6b35","#4facfe","#a855f7","#43e97b","#ffaa00","#f5515f","#00e5ff"];
+  for (let i = 0; i < 40; i++) {
+    const confetti = document.createElement("div");
+    confetti.className = "confetti";
+    confetti.style.cssText = `
+      position:fixed;z-index:10000;pointer-events:none;
+      left:${Math.random()*100}%;top:-10px;
+      width:${Math.random()*8+5}px;height:${Math.random()*8+5}px;
+      background:${colors[Math.floor(Math.random()*colors.length)]};
+      border-radius:${Math.random()>.5?"50%":"2px"};
+      animation:confettiFall ${Math.random()*2+1.5}s ease-out forwards;
+      animation-delay:${Math.random()*0.5}s;
+    `;
+    document.body.appendChild(confetti);
+    setTimeout(() => confetti.remove(), 3000);
+  }
+  // 弹窗
+  const popup = document.createElement("div");
+  popup.className = "achievement-popup";
+  popup.innerHTML = `
+    <div class="achievement-popup-card">
+      <div class="ach-popup-icon">🏆</div>
+      <h2>成就解锁！</h2>
+      <b>${achievement.name}</b>
+      <p>${achievement.desc}</p>
+      <small>奖励：${achievement.coin ? achievement.coin+"金币 " : ""}${achievement.diamond ? achievement.diamond+"钻石" : ""}</small>
+    </div>
+  `;
+  document.body.appendChild(popup);
+  setTimeout(() => { popup.classList.add("fade-out"); setTimeout(() => popup.remove(), 500); }, 3000);
+}
+
 function switchView(id) {
   $$(".view").forEach(v => v.classList.toggle("active", v.id === id));
   $$(".nav").forEach(n => n.classList.toggle("active", n.dataset.view === id));
@@ -2452,9 +2578,23 @@ function shareCatScore() {
   }
 }
 
+function countUp(el, target, duration = 800) {
+  const start = parseInt(el.textContent) || 0;
+  if (start === target) return;
+  const startTime = performance.now();
+  function step(now) {
+    const progress = Math.min((now - startTime) / duration, 1);
+    const eased = 1 - Math.pow(1 - progress, 3);
+    el.textContent = Math.round(start + (target - start) * eased);
+    if (progress < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+
 function renderHome() {
   const accuracy = getAccuracy(state.stats);
   $("comboHome").textContent = state.player.combo;
+  countUp($("comboHome"), state.player.combo);
   $("accuracyHome").textContent = `${accuracy}%`;
   $("xpBar").style.width = `${Math.min(100, state.player.xp)}%`;
   $("xpText").textContent = `${state.player.xp} / 100`;
@@ -2586,6 +2726,9 @@ function renderBattleStatus() {
   $("answeredValue").textContent = state.stats.answered;
   $("correctValue").textContent = state.stats.correct;
   $("levelStageValue").textContent = `${state.player.currentWorld}-${state.player.currentLevel}`;
+  // 血条震动
+  const hpBarEl = $("bossHpBar").parentElement;
+  if (hpBarEl) hpBarEl.classList.remove("shaking");
   renderSkillWeights();
 }
 
@@ -2755,6 +2898,21 @@ function renderPet() {
   $("petDesc").textContent = `技能：答对题目时额外获得 ${pet.level} 金币和 ${Math.ceil(pet.level / 2)} 经验。`;
   $("petBar").style.width = `${Math.min(100, pet.xp)}%`;
   $("petLevelText").textContent = `Lv.${pet.level}`;
+  // 宠物跟随鼠标
+  const petCard = $("pet").querySelector(".pet-card");
+  if (petCard) {
+    petCard.addEventListener("mousemove", (e) => {
+      const rect = petCard.getBoundingClientRect();
+      const x = (e.clientX - rect.left - rect.width/2) / 15;
+      const y = (e.clientY - rect.top - rect.height/2) / 15;
+      const petIcon = petCard.querySelector(".pet-big");
+      if (petIcon) petIcon.style.transform = `translate(${x}px,${y}px)`;
+    });
+    petCard.addEventListener("mouseleave", () => {
+      const petIcon = petCard.querySelector(".pet-big");
+      if (petIcon) petIcon.style.transform = "translate(0,0)";
+    });
+  }
 }
 
 function renderShop() {
@@ -3527,6 +3685,9 @@ function answerQuestion(value, btn) {
     state.player.maxCombo = Math.max(state.player.maxCombo, state.player.combo);
     const damage = 18 + Math.min(18, state.player.combo * 2);
     state.boss.hp = Math.max(0, state.boss.hp - damage);
+    // 血条震动
+    const hpBarContainer = $("bossHpBar").parentElement;
+    if (hpBarContainer) { hpBarContainer.classList.remove("shaking"); void hpBarContainer.offsetWidth; hpBarContainer.classList.add("shaking"); }
     gainReward();
     SFX.correct();
     if (state.player.combo >= 3) SFX.combo();
@@ -3534,6 +3695,10 @@ function answerQuestion(value, btn) {
     showToast(`答对了！Boss 受到 ${damage} 点伤害。`);
     damageMonster(currentQuestion.skill);
     if (state.player.combo >= 3) { catLastMessage = ""; catContext = "combo"; }
+    if (state.player.combo >= 5) {
+      document.querySelector(".app").classList.add("screen-shake");
+      setTimeout(() => document.querySelector(".app").classList.remove("screen-shake"), 350);
+    }
     if (state.boss.hp <= 0) clearLevel();
   } else {
     state.player.combo = 0;
@@ -3708,6 +3873,13 @@ function clearLevel() {
   if (state.player.currentLevel < 10) {
     state.player.currentLevel += 1;
     showToast(`击败了 ${world.boss}！第 ${state.player.currentLevel} 关开始！`);
+    // 宝箱动画
+    const chest = document.createElement("div");
+    chest.className = "chest-animation";
+    chest.innerHTML = `<span class="chest-icon">🎁</span>`;
+    document.body.appendChild(chest);
+    setTimeout(() => { chest.classList.add("open"); }, 300);
+    setTimeout(() => chest.remove(), 2800);
   } else if (state.player.currentWorld < DATA.worlds.length) {
     // 通关当前世界，显示胜利剧情
     state.player.currentWorld += 1;
@@ -3749,6 +3921,11 @@ function showEffect(text) {
   effect.classList.remove("show");
   void effect.offsetWidth;
   effect.classList.add("show");
+  // 连击数字放大效果
+  if (state.player.combo >= 5) {
+    $("comboValue").classList.add("combo-big");
+    setTimeout(() => $("comboValue").classList.remove("combo-big"), 600);
+  }
 }
 
 function useHint() {
@@ -3900,7 +4077,7 @@ function unlockAchievement(id) {
   state.achievements[id] = true;
   state.player.coin += a.coin;
   state.player.diamond += a.diamond;
-  showToast(`解锁成就：${a.name}`);
+  showAchievementPopup(a);
 }
 
 function exportSave() {
@@ -4201,6 +4378,40 @@ function init() {
 
 init();
 
+// ===== 星空粒子背景 =====
+(function initStarfield() {
+  const canvas = document.getElementById("starfield");
+  if (!canvas) return;
+  const ctx = canvas.getContext("2d");
+  let stars = [];
+  let w, h;
+
+  function resize() { w = canvas.width = window.innerWidth; h = canvas.height = window.innerHeight; }
+  resize();
+  window.addEventListener("resize", resize);
+
+  for (let i = 0; i < 120; i++) {
+    stars.push({ x: Math.random() * w, y: Math.random() * h, r: Math.random() * 2 + 0.5, speed: Math.random() * 0.3 + 0.1, opacity: Math.random() * 0.6 + 0.2, twinkle: Math.random() * Math.PI * 2 });
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, w, h);
+    stars.forEach(s => {
+      s.twinkle += 0.01;
+      s.y -= s.speed;
+      if (s.y < -5) { s.y = h + 5; s.x = Math.random() * w; }
+      const alpha = s.opacity + Math.sin(s.twinkle) * 0.2;
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255,255,255,${Math.max(0.1, alpha)})`;
+      ctx.fill();
+    });
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
 </script>
+<canvas id="starfield"></canvas>
 </body>
 </html>
